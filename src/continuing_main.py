@@ -28,13 +28,15 @@ parser.add_argument('-i', '--idxs', nargs='+', type=int, required=True)
 parser.add_argument('--save_path', type=str, default='./')
 parser.add_argument('--checkpoint_path', type=str, default='./checkpoints/')
 parser.add_argument('--silent', action='store_true', default=False)
+parser.add_argument('--gpu', action='store_true', default=False)
 
 args = parser.parse_args()
 
 # ---------------------------
 # -- Library Configuration --
 # ---------------------------
-jax.config.update('jax_platform_name', 'cpu')
+device = 'gpu' if args.gpu else 'cpu'
+jax.config.update('jax_platform_name', device)
 
 logging.getLogger('absl').setLevel(logging.ERROR)
 logging.getLogger('filelock').setLevel(logging.ERROR)
@@ -91,6 +93,8 @@ for idx in indices:
 
     # Run the experiment
     start_time = time.time()
+
+    os.makedirs(f"results/forager/Forager/{problem.exp.agent}/{problem.env_params['aperture']}/{agent.optimizer_params['alpha']}", exist_ok=True)
 
     # if we haven't started yet, then make the first interaction
     if glue.total_steps == 0:

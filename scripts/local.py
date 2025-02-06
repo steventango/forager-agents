@@ -17,6 +17,7 @@ parser.add_argument('-e', type=str, nargs='+', required=True)
 parser.add_argument('--cpus', type=int, default=8)
 parser.add_argument('--entry', type=str, default='src/main.py')
 parser.add_argument('--results', type=str, default='./')
+parser.add_argument('--gpu', action='store_true', default=False)
 
 def count(pre, it):
     print(pre, 0, end='\r')
@@ -39,6 +40,8 @@ if __name__ == "__main__":
         indices = count(path, e_to_missing[path])
         for idx in indices:
             exe = f'python {cmdline.entry} --silent -e {path} -i {idx}'
+            if cmdline.gpu:
+                exe += ' --gpu'
             cmds.append(exe)
 
     print(len(cmds))

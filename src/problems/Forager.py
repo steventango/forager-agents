@@ -7,7 +7,7 @@ class Forager(BaseProblem):
     def __init__(self, exp: ExperimentModel, idx: int, collector: Collector):
         super().__init__(exp, idx, collector)
 
-        self.env = Env(self.seed)
+        self.env = Env(self.seed, **self.env_params)
         self.actions = 4
 
         # get aperture size from env

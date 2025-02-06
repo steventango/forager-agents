@@ -3,27 +3,31 @@ from typing import Any
 from RlGlue import BaseEnvironment
 from forager.Env import ForagerEnv
 from forager.config import ForagerConfig
-from forager.objects import Wall, Flower, Thorns
+from forager.objects import Truffle, Oyster
 
 class Forager(BaseEnvironment):
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, aperture: int):
         config = ForagerConfig(
-            size=500,
+            size=(16, 8),
             object_types={
-                'wall': Wall,
-                'flower': Flower,
-                'thorns': Thorns,
+                "truffle": Truffle,
+                "oyster": Oyster,
             },
-
-            observation_mode='objects',
-            aperture=9,
-            seed=seed,
+            aperture=aperture,
+            seed=seed
         )
-
         self.env = ForagerEnv(config)
-        self.env.generate_objects(name='flower', freq=0.1)
-        self.env.generate_objects(name='thorns', freq=0.2)
-        self.env.generate_objects(name='wall', freq=0.01)
+        size = config.size
+        truffle_locations = np.zeros(size)
+        truffle_locations[2:6, 2:6] = 1
+        truffle_locations = np.ravel_multi_index(np.where(truffle_locations), size, order="F")
+
+        self.env.generate_objects_locations(2.0, "truffle", truffle_locations)
+
+        oyster_locations = np.zeros(size)
+        oyster_locations[10:14, 2:6] = 1
+        oyster_locations = np.ravel_multi_index(np.where(oyster_locations), size, order="F")
+        self.env.generate_objects_locations(2.0, "oyster", oyster_locations)
 
     def start(self) -> Any:
         obs = self.env.start()
@@ -32,3 +36,6 @@ class Forager(BaseEnvironment):
     def step(self, a: int):
         obs, r = self.env.step(a)
         return (r, obs.astype(np.float32), False, {})
+
+    def render(self):
+        return self.env.render()
