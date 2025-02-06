@@ -97,7 +97,9 @@ for idx in indices:
     # Run the experiment
     start_time = time.time()
 
-    os.makedirs(f"results/forager/Forager/{problem.exp.agent}/{problem.env_params['aperture']}/{agent.optimizer_params['alpha']}", exist_ok=True)
+    context = exp.buildSaveContext(0, base=args.save_path)
+    path = context.ensureExists()
+    os.makedirs(path + f"/{problem.env_params['aperture']}/{agent.optimizer_params['alpha']}", exist_ok=True)
 
     # if we haven't started yet, then make the first interaction
     if glue.total_steps == 0:
@@ -127,7 +129,7 @@ for idx in indices:
             recorded_frames.append(frame)
 
     clip = ImageSequenceClip(recorded_frames, fps=8)
-    clip.write_videofile(f"results/forager/Forager/{problem.exp.agent}/{problem.env_params['aperture']}/{agent.optimizer_params['alpha']}/{idx}.mp4")
+    clip.write_videofile(path + f"/{problem.env_params['aperture']}/{agent.optimizer_params['alpha']}/{idx}.mp4")
 
 
     collector.reset()

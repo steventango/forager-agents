@@ -3,31 +3,25 @@ from typing import Any
 from RlGlue import BaseEnvironment
 from forager.Env import ForagerEnv
 from forager.config import ForagerConfig
-from forager.objects import Truffle, Oyster
+from forager.objects import Morel, Oyster
 
 class Forager(BaseEnvironment):
     def __init__(self, seed: int, aperture: int):
         config = ForagerConfig(
             size=(16, 8),
             object_types={
-                "truffle": Truffle,
+                "morel": Morel,
                 "oyster": Oyster,
             },
             aperture=aperture,
             seed=seed
         )
         self.env = ForagerEnv(config)
-        size = config.size
-        truffle_locations = np.zeros(size)
-        truffle_locations[2:6, 2:6] = 1
-        truffle_locations = np.ravel_multi_index(np.where(truffle_locations), size, order="F")
 
-        self.env.generate_objects_locations(2.0, "truffle", truffle_locations)
-
-        oyster_locations = np.zeros(size)
-        oyster_locations[10:14, 2:6] = 1
-        oyster_locations = np.ravel_multi_index(np.where(oyster_locations), size, order="F")
-        self.env.generate_objects_locations(2.0, "oyster", oyster_locations)
+        # because sample_unpopulated only does 10 tries, sometimes collisions will happen
+        # so we need to set freq > 1 to ensure that we get the expected number of objects
+        self.env.generate_objects(6.0, "morel", (2, 2), (6, 6))
+        self.env.generate_objects(6.0, "oyster", (10, 2), (14, 6))
 
     def start(self) -> Any:
         obs = self.env.start()

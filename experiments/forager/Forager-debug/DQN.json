@@ -1,0 +1,28 @@
+{
+    "agent": "DQN",
+    "problem": "Forager",
+    "total_steps": 1000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "epsilon": 0.1,
+        "target_refresh": 128,
+        "buffer_type": "uniform",
+        "buffer_size": 4000,
+        "batch": 32,
+        "gamma": 0.9,
+        "n_step": 3,
+        "environment": {
+            "aperture": 3
+        },
+        "optimizer": {
+            "name": "ADAM",
+            "alpha": 0.001,
+            "beta1": 0.9,
+            "beta2": 0.999
+        },
+        "representation": {
+            "type": "ForagerNet",
+            "hidden": 64
+        }
+    }
+}
