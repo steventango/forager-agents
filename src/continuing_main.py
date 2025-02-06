@@ -18,6 +18,9 @@ from PyExpUtils.results.sqlite import saveCollector
 from PyExpUtils.collection.Collector import Collector
 from PyExpUtils.collection.Sampler import Ignore, MovingAverage, Subsample
 from PyExpUtils.collection.utils import Pipe
+from tqdm import tqdm
+from PIL import Image
+from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 
 # ------------------
 # -- Command Args --
@@ -100,7 +103,9 @@ for idx in indices:
     if glue.total_steps == 0:
         glue.start()
 
-    for step in range(glue.total_steps, exp.total_steps):
+    recorded_frames = []
+
+    for step in tqdm(range(glue.total_steps, exp.total_steps)):
         collector.next_frame()
         chk.maybe_save()
         interaction = glue.step()
@@ -113,6 +118,17 @@ for idx in indices:
 
             avg_reward = collector.get_last('reward')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
+
+        if step > exp.total_steps - 1000:
+            rgb_array = env.render()
+            image = Image.fromarray(rgb_array)
+            image = image.resize((rgb_array.shape[1] * 10, rgb_array.shape[0] * 10), Image.NEAREST)
+            frame = np.array(image)
+            recorded_frames.append(frame)
+
+    clip = ImageSequenceClip(recorded_frames, fps=8)
+    clip.write_videofile(f"results/forager/Forager/{problem.exp.agent}/{problem.env_params['aperture']}/{agent.optimizer_params['alpha']}/{idx}.mp4")
+
 
     collector.reset()
     # ------------

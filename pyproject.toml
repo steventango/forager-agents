@@ -40,6 +40,7 @@ dependencies = [
     'RlEvaluation~=1.0',
     'PyExpPlotting-andnp',
     'matplotlib',
+    'moviepy',
 ]
 
 [project.optional-dependencies]
