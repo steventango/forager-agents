@@ -25,11 +25,8 @@ from experiment.tools import parseCmdLineArgs
 setDefaultConference('jmlr')
 
 COLORS = {
-    'SoftmaxAC': 'grey',
-    'EQRC': 'blue',
-    'ESARSA': 'red',
-    'DQN': 'black',
-    'PrioritizedDQN': 'purple',
+    'DQN-3': 'blue',
+    'DQN-17': 'red',
 }
 
 METRIC = "reward"
@@ -69,8 +66,8 @@ if __name__ == "__main__":
 
     exp = results.get_any_exp()
 
+    f, ax = plt.subplots()
     for env, env_df in split_over_column(df, col='environment.aperture'):
-        f, ax = plt.subplots()
         for alg, sub_df in split_over_column(env_df, col='algorithm'):
             if len(sub_df) == 0: continue
 
@@ -105,17 +102,19 @@ if __name__ == "__main__":
                 statistic=Statistic.mean,
             )
 
-            ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
-            ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
+            ax.plot(xs[0], res.sample_stat, label=f"{alg}-{env}", color=COLORS[f"{alg}-{env}"], linewidth=0.5)
+            ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[f"{alg}-{env}"], alpha=0.2)
+            ax.set_xlabel('Steps')
+            ax.set_ylabel('Average Reward')
 
-        ax.legend()
-        if should_save:
-            save(
-                save_path=f'{path}/plots',
-                plot_name=f'{env}',
-                save_type=save_type,
-            )
-            plt.clf()
-        else:
-            plt.show()
-            exit()
+    ax.legend()
+    if should_save:
+        save(
+            save_path=f'{path}/plots',
+            plot_name=f'learning_curve',
+            save_type=save_type,
+        )
+        plt.clf()
+    else:
+        plt.show()
+        exit()
