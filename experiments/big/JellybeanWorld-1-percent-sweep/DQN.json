@@ -1,6 +1,6 @@
 {
     "agent": "DQN",
-    "problem": "JellybeanWorld-big",
+    "problem": "JellybeanWorldBig",
     "total_steps": 100000,
     "episode_cutoff": -1,
     "metaParameters": {
