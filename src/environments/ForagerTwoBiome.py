@@ -5,7 +5,7 @@ from forager.Env import ForagerEnv
 from forager.config import ForagerConfig
 from forager.objects import Morel, Oyster
 
-class Forager(BaseEnvironment):
+class ForagerTwoBiome(BaseEnvironment):
     def __init__(self, seed: int, aperture: int):
         config = ForagerConfig(
             size=(16, 8),

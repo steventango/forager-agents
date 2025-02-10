@@ -1,5 +1,5 @@
 from PyExpUtils.collection.Collector import Collector
-from environments.ForagerTwoBiome import Forager as Env
+from environments.ForagerTwoBiome import ForagerTwoBiome as Env
 from experiment.ExperimentModel import ExperimentModel
 from problems.BaseProblem import BaseProblem
 
