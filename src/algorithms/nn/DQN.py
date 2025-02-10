@@ -35,8 +35,6 @@ def q_loss(q, a, r, gamma, qp):
 class DQN(NNAgent):
     def __init__(self, observations: Tuple, actions: int, params: Dict, collector: Collector, seed: int):
         super().__init__(observations, actions, params, collector, seed)
-        # set up the target network parameters
-        self.target_refresh = params['target_refresh']
 
         self.state = AgentState(
             params=self.state.params,
@@ -81,8 +79,17 @@ class DQN(NNAgent):
         for k, v in metrics.items():
             self.collector.collect(k, np.mean(v).item())
 
-        if self.updates % self.target_refresh == 0:
-            self.state.target_params = self.state.params
+        self._sync_params()
+
+    def _sync_params(self):
+        def _polyak_weights(target_p, online_p):
+            return self.tau * online_p + (1 - self.tau) * target_p
+
+        self.target_params = jax.tree_map(
+            _polyak_weights,
+            self.state.target_params,
+            self.state.params,
+        )
 
     # -------------
     # -- Updates --
