@@ -64,7 +64,7 @@ class DQN(NNAgent):
             return
 
         # skip updates if the buffer isn't full yet
-        if self.buffer.size() <= self.batch_size:
+        if self.buffer.size() <= self.minimum_replay_history:
             return
 
         self.updates += 1

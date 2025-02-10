@@ -58,6 +58,7 @@ class NNAgent(BaseAgent):
         self.buffer_size = params['buffer_size']
         self.batch_size = params['batch']
         self.update_freq = params.get('update_freq', 1)
+        self.minimum_replay_history = params.get('minimum_replay_history', self.batch_size)
 
         self.buffer = build_buffer(
             buffer_type=params['buffer_type'],
