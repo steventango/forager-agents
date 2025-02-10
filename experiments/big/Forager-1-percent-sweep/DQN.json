@@ -1,6 +1,6 @@
 {
     "agent": "DQN",
-    "problem": "Forager-Big",
+    "problem": "ForagerBig",
     "total_steps": 100000,
     "episode_cutoff": -1,
     "metaParameters": {
