@@ -132,7 +132,7 @@ for idx in indices:
             recorded_frames.append(frame)
         elif step % video_frequency == video_length:
             clip = ImageSequenceClip(recorded_frames, fps=8)
-            clip.write_videofile(path + f"/{step}-{step + video_length}.mp4")
+            clip.write_videofile(path + f"/{step - video_length}-{step - 1}.mp4")
             recorded_frames = []
 
 
