@@ -1,6 +1,6 @@
 from PyExpUtils.collection.Collector import Collector
 
-from environments.JellybeanWorldBig import JellybeanWorldBig as Env
+from environments.JellybeanWorldBig import JellybeanWorldBig as Env, items
 from experiment.ExperimentModel import ExperimentModel
 from problems.BaseProblem import BaseProblem
 
@@ -14,5 +14,5 @@ class JellybeanWorldBig(BaseProblem):
 
         ap = self.env.config.vision_range * 2 + 1
 
-        self.observations = (ap, ap, len(self.env.config.items))
+        self.observations = (ap, ap, len(items))
         self.gamma = 0.9

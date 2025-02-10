@@ -2,8 +2,8 @@ from math import log, pi
 from typing import Any, Dict, Tuple
 
 import jbw
+import numpy as np
 from RlGlue import BaseEnvironment
-
 
 items = []
 items.append(
@@ -74,17 +74,28 @@ class JellybeanWorldBig(BaseEnvironment):
         sim = jbw.Simulator(sim_config=self.config)
         self.agent = jbw.Agent(sim, None)
         self.previous_items = None
+        self.colors = np.array([item.color for item in items])[:, 0]
 
     def start(self) -> Any:
         self.previous_items = self.agent.collected_items()
-        return self.agent.vision()
+        obs = self.get_obs()
+        return obs
 
     def step(self, action: int) -> Tuple[float, Any, bool, Dict[str, Any]]:
-        self.agent.move(action)
+        self.agent.move(jbw.RelativeDirection(action))
         items = self.agent.collected_items()
         jellybean_delta = items[0] - self.previous_items[0]
         onion_delta = items[1] - self.previous_items[1]
         self.previous_items = items
         reward = jellybean_delta - onion_delta
-        obs = self.agent.vision()
+        obs = self.get_obs()
         return reward, obs, False, {}
+
+    def get_obs(self):
+        vision = self.agent.vision()
+        obs = vision[:, :, 0]
+        obs = (np.abs(obs[:, :, None] - self.colors[None, None]) < 1e-2).astype(np.float32)
+        return obs
+
+    def render(self):
+        return (self.agent.vision() * 255).astype(np.uint8)
