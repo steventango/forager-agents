@@ -99,12 +99,16 @@ for idx in indices:
 
     context = exp.buildSaveContext(0, base=args.save_path)
     path = context.ensureExists()
+    path += f'/{idx}'
+    os.makedirs(path, exist_ok=True)
 
     # if we haven't started yet, then make the first interaction
     if glue.total_steps == 0:
         glue.start()
 
     recorded_frames = []
+    video_frequency = 10000
+    video_length = 1000
 
     for step in tqdm(range(glue.total_steps, exp.total_steps)):
         collector.next_frame()
@@ -120,15 +124,16 @@ for idx in indices:
             avg_reward = collector.get_last('reward')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
 
-        if step > exp.total_steps - 1000:
+        if step % video_frequency < video_length:
             rgb_array = env.render()
             image = Image.fromarray(rgb_array)
             image = image.resize((rgb_array.shape[1] * 10, rgb_array.shape[0] * 10), Image.NEAREST)
             frame = np.array(image)
             recorded_frames.append(frame)
-
-    clip = ImageSequenceClip(recorded_frames, fps=8)
-    clip.write_videofile(path + f"/{idx}.mp4")
+        elif step % video_frequency == video_length:
+            clip = ImageSequenceClip(recorded_frames, fps=8)
+            clip.write_videofile(path + f"/{step}-{step + video_length}.mp4")
+            recorded_frames = []
 
 
     collector.reset()
