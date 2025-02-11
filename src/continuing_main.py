@@ -107,7 +107,7 @@ for idx in indices:
         glue.start()
 
     recorded_frames = []
-    video_frequency = 10000
+    video_frequency = 100000
     video_length = 1000
 
     for step in tqdm(range(glue.total_steps, exp.total_steps)):
