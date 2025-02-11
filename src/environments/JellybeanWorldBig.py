@@ -83,13 +83,17 @@ class JellybeanWorldBig(BaseEnvironment):
 
     def step(self, action: int) -> Tuple[float, Any, bool, Dict[str, Any]]:
         self.agent.move(jbw.RelativeDirection(action))
-        items = self.agent.collected_items()
-        jellybean_delta = items[0] - self.previous_items[0]
-        onion_delta = items[1] - self.previous_items[1]
-        self.previous_items = items
-        reward = jellybean_delta - onion_delta
+        reward = self.get_reward()
         obs = self.get_obs()
         return reward, obs, False, {}
+
+    def get_reward(self):
+        items = self.agent.collected_items()
+        jellybean_delta = int(items[0] - self.previous_items[0])
+        onion_delta = int(items[1] - self.previous_items[1])
+        self.previous_items = items
+        reward = jellybean_delta - onion_delta
+        return reward
 
     def get_obs(self):
         vision = self.agent.vision()
