@@ -13,10 +13,7 @@
         "n_step": 3,
         "update_freq": 4,
         "environment": {
-            "aperture": [
-                3,
-                17
-            ]
+            "aperture": 3
         },
         "experiment": {
             "seed_offset": 1000000
