@@ -32,7 +32,7 @@ COLORS = {
 
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-SUBSAMPLE = 100
+SUBSAMPLE = 1
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -105,11 +105,19 @@ if __name__ == "__main__":
             )
 
             ax.plot(xs[0], res.sample_stat, label=f"{alg}-{env}", color=COLORS[f"{alg}-{env}"], linewidth=0.5)
-            ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[f"{alg}-{env}"], alpha=0.2)
+            if len(ys) <= 5:
+                for x, y in zip(xs, ys):
+                    ax.plot(x, y, color=COLORS[f"{alg}-{env}"], linewidth=0.5, alpha=0.2)
+            else:
+                ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[f"{alg}-{env}"], alpha=0.2)
             ax.set_xlabel('Steps')
             ax.set_ylabel('Average Reward')
 
     ax.legend()
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
     if should_save:
         save(
             save_path=f'{path}/plots',
