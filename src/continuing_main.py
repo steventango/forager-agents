@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.append(os.getcwd())
 
+import json
 import time
 import socket
 import logging
@@ -109,6 +110,11 @@ for idx in indices:
     recorded_frames = []
     video_frequency = 100000
     video_length = 1000
+
+    with open(path + '/hypers.json', 'w') as f:
+        hypers = exp.get_hypers(idx)
+        hypers["run"] = run
+        json.dump(hypers, f, indent=2)
 
     for step in tqdm(range(glue.total_steps, exp.total_steps)):
         collector.next_frame()
