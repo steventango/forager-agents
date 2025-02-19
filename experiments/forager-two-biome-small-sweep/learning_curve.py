@@ -1,20 +1,23 @@
 import os
 import sys
+
 sys.path.append(os.getcwd() + '/src')
 
-import numpy as np
 import matplotlib.pyplot as plt
-from PyExpPlotting.matplot import save, setDefaultConference
-from PyExpUtils.results.Collection import ResultCollection
-
-from RlEvaluation.config import data_definition
-from RlEvaluation.interpolation import compute_step_return
-from RlEvaluation.temporal import TimeSummary, extract_learning_curves, curve_percentile_bootstrap_ci
-from RlEvaluation.statistics import Statistic
-from RlEvaluation.utils.pandas import split_over_column
-
+import numpy as np
 import RlEvaluation.hypers as Hypers
 import RlEvaluation.metrics as Metrics
+from PyExpPlotting.matplot import save, setDefaultConference
+from PyExpUtils.results.Collection import ResultCollection
+from RlEvaluation.config import data_definition
+from RlEvaluation.interpolation import compute_step_return
+from RlEvaluation.statistics import Statistic
+from RlEvaluation.temporal import (
+    TimeSummary,
+    curve_percentile_bootstrap_ci,
+    extract_learning_curves,
+)
+from RlEvaluation.utils.pandas import split_over_column
 
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
@@ -32,7 +35,7 @@ COLORS = {
 
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-SUBSAMPLE = 1
+SUBSAMPLE = 10
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
