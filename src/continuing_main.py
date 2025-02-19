@@ -76,6 +76,7 @@ for idx in indices:
         config={
             'reward': Pipe(
                 MovingAverage(0.999),
+                Subsample(100),
             ),
         },
         # by default, ignore keys that are not explicitly listed above
