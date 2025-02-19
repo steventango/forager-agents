@@ -37,6 +37,7 @@ class DQN(NNAgent):
         super().__init__(observations, actions, params, collector, seed)
         # set up the target network parameters
         self.target_refresh = params['target_refresh']
+        self.tau = params.get('tau', 1.0)
 
         self.state = AgentState(
             params=self.state.params,
@@ -88,7 +89,7 @@ class DQN(NNAgent):
         def _polyak_weights(target_p, online_p):
             return self.tau * online_p + (1 - self.tau) * target_p
 
-        self.target_params = jax.tree_map(
+        self.state.target_params = jax.tree_map(
             _polyak_weights,
             self.state.target_params,
             self.state.params,
