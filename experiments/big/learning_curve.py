@@ -31,7 +31,7 @@ COLORS = {
 
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-SUBSAMPLE = 100
+POINTS = 1000
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     assert df is not None
 
-    exp = results.get_any_exp()
+    results = iter(results)
 
     for env, env_df in split_over_column(df, col='environment'):
         f, ax = plt.subplots()
@@ -83,6 +83,9 @@ if __name__ == "__main__":
             print(env, alg)
             Hypers.pretty_print(report)
 
+            result = next(results)
+            exp = result.exp
+
             xs, ys = extract_multiple_learning_curves(
                 sub_df,
                 report.uncertainty_set_configurations,
@@ -90,8 +93,9 @@ if __name__ == "__main__":
                 interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
             )
 
-            xs = np.asarray(xs)[:, ::SUBSAMPLE]
-            ys = np.asarray(ys)[:, ::SUBSAMPLE]
+            subsample = len(xs[0]) // POINTS
+            xs = np.asarray(xs)[:, ::subsample]
+            ys = np.asarray(ys)[:, ::subsample]
 
             # make sure all of the x values are the same for each curve
             assert np.all(np.isclose(xs[0], xs))
@@ -106,6 +110,10 @@ if __name__ == "__main__":
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
             ax.set_xlabel('Steps')
             ax.set_ylabel('Average Reward')
+
+        # despine
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
 
         ax.legend()
         if should_save:
