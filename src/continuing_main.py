@@ -107,7 +107,7 @@ for idx in indices:
         glue.start()
 
     recorded_frames = []
-    video_frequency = 100000
+    video_frequency = 10000
     video_length = 1000
 
     with open(path + '/hypers.json', 'w') as f:
@@ -129,7 +129,7 @@ for idx in indices:
             avg_reward = collector.get_last('reward')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
 
-        if step % video_frequency < video_length:
+        if step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
             rgb_array = env.render()
             image = Image.fromarray(rgb_array)
             image = image.resize((rgb_array.shape[1] * 10, rgb_array.shape[0] * 10), Image.NEAREST)
@@ -139,6 +139,10 @@ for idx in indices:
             clip = ImageSequenceClip(recorded_frames, fps=8)
             clip.write_videofile(path + f"/{step - video_length}-{step - 1}.mp4")
             recorded_frames = []
+
+    if len(recorded_frames) > 0:
+        clip = ImageSequenceClip(recorded_frames, fps=8)
+        clip.write_videofile(path + f"/{exp.total_steps - video_length}-{exp.total_steps - 1}.mp4")
 
 
     collector.reset()
