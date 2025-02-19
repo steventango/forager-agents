@@ -32,4 +32,4 @@ class ForagerTwoBiome(BaseEnvironment):
         return (r, obs.astype(np.float32), False, {})
 
     def render(self):
-        return self.env.render()
+        return self.env.render(mode="world")
