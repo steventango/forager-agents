@@ -28,8 +28,12 @@ from experiment.tools import parseCmdLineArgs
 setDefaultConference('jmlr')
 
 COLORS = {
-    'DQN-3': 'blue',
-    'DQN-15': 'red',
+    'DQN-3': '#40ffff',
+    'DQN-5': '#3ddcfe',
+    'DQN-7': '#57abff',
+    'DQN-9': '#8b8cff',
+    'DQN-11': '#b260ff',
+    'DQN-15': '#d72dff',
     'DQN-17': 'red',
 }
 
@@ -71,7 +75,7 @@ if __name__ == "__main__":
     exp = results.get_any_exp()
 
     f, ax = plt.subplots()
-    for env, env_df in split_over_column(df, col='environment.aperture'):
+    for env, env_df in sorted(split_over_column(df, col='environment.aperture'), key=lambda x: x[0]):
         for alg, sub_df in split_over_column(env_df, col='algorithm'):
             if len(sub_df) == 0: continue
 
