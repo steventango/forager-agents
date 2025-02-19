@@ -1,9 +1,11 @@
 from PyExpUtils.collection.Collector import Collector
-from environments.ForagerTwoBiome import ForagerTwoBiome as Env
+
+from environments.ForagerTwoBiomeSmall import ForagerTwoBiomeSmall as Env
 from experiment.ExperimentModel import ExperimentModel
 from problems.BaseProblem import BaseProblem
 
-class ForagerTwoBiome(BaseProblem):
+
+class ForagerTwoBiomeSmall(BaseProblem):
     def __init__(self, exp: ExperimentModel, idx: int, collector: Collector):
         super().__init__(exp, idx, collector)
 

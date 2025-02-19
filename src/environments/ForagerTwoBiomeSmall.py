@@ -1,11 +1,13 @@
-import numpy as np
 from typing import Any
-from RlGlue import BaseEnvironment
-from forager.Env import ForagerEnv
-from forager.config import ForagerConfig
-from forager.objects import Morel, Oyster
 
-class ForagerTwoBiome(BaseEnvironment):
+import numpy as np
+from forager.config import ForagerConfig
+from forager.Env import ForagerEnv
+from forager.objects import Morel, Oyster
+from RlGlue import BaseEnvironment
+
+
+class ForagerTwoBiomeSmall(BaseEnvironment):
     def __init__(self, seed: int, aperture: int):
         config = ForagerConfig(
             size=(16, 8),
