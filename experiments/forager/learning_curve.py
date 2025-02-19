@@ -9,7 +9,7 @@ from PyExpUtils.results.Collection import ResultCollection
 
 from RlEvaluation.config import data_definition
 from RlEvaluation.interpolation import compute_step_return
-from RlEvaluation.temporal import TimeSummary, extract_multiple_learning_curves, curve_percentile_bootstrap_ci
+from RlEvaluation.temporal import TimeSummary, extract_learning_curves, curve_percentile_bootstrap_ci
 from RlEvaluation.statistics import Statistic
 from RlEvaluation.utils.pandas import split_over_column
 
@@ -84,15 +84,16 @@ if __name__ == "__main__":
             print(env, alg)
             Hypers.pretty_print(report)
 
-            xs, ys = extract_multiple_learning_curves(
+            xs, ys = extract_learning_curves(
                 sub_df,
-                report.uncertainty_set_configurations,
+                report.best_configuration,
                 metric=METRIC,
                 interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
             )
 
             xs = np.asarray(xs)[:, ::SUBSAMPLE]
             ys = np.asarray(ys)[:, ::SUBSAMPLE]
+            print(xs.shape, ys.shape)
 
             # make sure all of the x values are the same for each curve
             assert np.all(np.isclose(xs[0], xs))
