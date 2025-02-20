@@ -4,9 +4,7 @@
     "total_steps": 500000,
     "episode_cutoff": -1,
     "metaParameters": {
-        "initial_epsilon": 1,
-        "final_epsilon": 0.05,
-        "epsilon_steps": 500000,
+        "epsilon": 0.05,
         "target_refresh": 128,
         "buffer_type": "uniform",
         "buffer_size": 10000,
