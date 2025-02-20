@@ -28,13 +28,13 @@ from experiment.tools import parseCmdLineArgs
 setDefaultConference('jmlr')
 
 COLORS = {
-    'DQN-3': '#40ffff',
-    'DQN-5': '#3ddcfe',
+    'DQN-3': '#00ffff',
+    'DQN-5': '#3ddcff',
     'DQN-7': '#57abff',
     'DQN-9': '#8b8cff',
     'DQN-11': '#b260ff',
-    'DQN-15': '#d72dff',
-    'DQN-17': 'red',
+    'DQN-13': '#d72dff',
+    'DQN-15': '#ff00ff',
 }
 
 METRIC = "reward"

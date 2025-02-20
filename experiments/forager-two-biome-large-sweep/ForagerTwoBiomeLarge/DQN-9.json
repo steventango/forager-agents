@@ -4,13 +4,15 @@
     "total_steps": 10000,
     "episode_cutoff": -1,
     "metaParameters": {
-        "epsilon": 0.1,
+        "initial_epsilon": 1,
+        "final_epsilon": 0.01,
+        "epsilon_steps": 10000,
         "target_refresh": 128,
         "buffer_type": "uniform",
         "buffer_size": 10000,
         "batch": 32,
         "gamma": 0.9,
-        "n_step": 3,
+        "n_step": 1,
         "update_freq": 4,
         "environment": {
             "aperture": 9
