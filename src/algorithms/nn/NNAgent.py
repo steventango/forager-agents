@@ -28,11 +28,24 @@ class NNAgent(BaseAgent):
         # ------------------------------
         # -- Configuration Parameters --
         # ------------------------------
-        self.rep_params: Dict = params['representation']
-        self.optimizer_params: Dict = params['optimizer']
+        self.rep_params: Dict = params["representation"]
+        self.optimizer_params: Dict = params["optimizer"]
 
-        self.epsilon = params['epsilon']
-        self.reward_clip = params.get('reward_clip', 0)
+        self.epsilon_steps = params.get("epsilon_steps")
+        if self.epsilon_steps is not None:
+            self.epsilon = params.get("epsilon")
+            self.initial_epsilon = params.get("initial_epsilon", self.epsilon)
+            self.final_epsilon = params.get("final_epsilon", self.epsilon)
+            self.epsilon = self.initial_epsilon
+        else:
+            self.epsilon = params["epsilon"]
+        assert self.epsilon is not None or (
+            self.epsilon_steps is not None
+            and self.initial_epsilon is not None
+            and self.initial_epsilon is not None
+            and self.final_epsilon is not None
+        )
+        self.reward_clip = params.get("reward_clip", 0)
 
         # ---------------------
         # -- NN Architecture --
@@ -159,6 +172,11 @@ class NNAgent(BaseAgent):
             terminal=False,
         ))
 
+        if self.epsilon_steps is not None:
+            self.epsilon = max(
+                self.final_epsilon,
+                self.initial_epsilon - (self.initial_epsilon - self.final_epsilon) * self.steps / self.epsilon_steps,
+            )
         self.update()
         return a
 
