@@ -35,7 +35,7 @@ COLORS = {
 
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-SUBSAMPLE = 10
+SUBSAMPLE = 100
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
