@@ -8,12 +8,21 @@ from forager.objects import DeathCap, Morel, Oyster
 from RlGlue import BaseEnvironment
 
 
+class Morel2(Morel):
+    def regen_delay(self, rng: np.random.Generator, clock: int) -> int | None:
+        self.target_location = self.current_location
+        return 300
+
+    def reward(self, rng: np.random.Generator, clock: int) -> float:
+        return 30
+
+
 class ForagerTwoBiomeLarge(BaseEnvironment):
     def __init__(self, seed: int, aperture: int):
         config = ForagerConfig(
             size=(15, 15),
             object_types={
-                "morel": Morel,
+                "morel": Morel2,
                 "oyster": Oyster,
                 "deathcap": DeathCap,
             },
@@ -23,7 +32,7 @@ class ForagerTwoBiomeLarge(BaseEnvironment):
         self.env = ForagerEnv(config)
         # 012345678901234
         # ___AA_____BB___
-        # 30 * (0.5 * 10) / 100 = 1.5
+        # 30 * (0.5 * 30) / 300 = 1.5
         self.env.generate_objects(0.5, "morel", (3, 0), (5, 15))
 
         # 30 * (0.5 * 1 + 0.25 * -1) / 10 = 0.75
