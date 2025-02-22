@@ -11,10 +11,21 @@ from RlGlue import BaseEnvironment
 class Morel2(Morel):
     def regen_delay(self, rng: np.random.Generator, clock: int) -> int | None:
         self.target_location = self.current_location
-        return 300
+        return int(max(0, rng.normal(300, 30)))
 
     def reward(self, rng: np.random.Generator, clock: int) -> float:
         return 30
+
+class Oyster2(Oyster):
+    def regen_delay(self, rng: np.random.Generator, clock: int) -> int | None:
+        self.target_location = self.current_location
+        return int(max(0, rng.normal(10, 1)))
+
+
+class DeathCap2(DeathCap):
+    def regen_delay(self, rng: np.random.Generator, clock: int) -> int | None:
+        self.target_location = self.current_location
+        return int(max(0, rng.normal(10, 1)))
 
 
 class ForagerTwoBiomeLarge(BaseEnvironment):
@@ -23,8 +34,8 @@ class ForagerTwoBiomeLarge(BaseEnvironment):
             size=(15, 15),
             object_types={
                 "morel": Morel2,
-                "oyster": Oyster,
-                "deathcap": DeathCap,
+                "oyster": Oyster2,
+                "deathcap": DeathCap2,
             },
             aperture=aperture,
             seed=seed,
