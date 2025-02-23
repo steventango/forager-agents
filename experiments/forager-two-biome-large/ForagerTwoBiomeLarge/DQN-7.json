@@ -6,14 +6,14 @@
     "metaParameters": {
         "initial_epsilon": 1,
         "final_epsilon": 0.05,
-        "epsilon_steps": 500000,
-        "target_refresh": 128,
+        "epsilon_steps": 400000,
+        "target_refresh": 1,
         "buffer_type": "uniform",
         "buffer_size": 10000,
         "batch": 32,
         "gamma": 0.9,
         "n_step": 1,
-        "update_freq": 4,
+        "update_freq": 1,
         "environment": {
             "aperture": 7
         },
@@ -22,9 +22,10 @@
         },
         "optimizer": {
             "name": "ADAM",
-            "alpha": 0.0003,
+            "alpha": 0.0001,
             "beta1": 0.9,
-            "beta2": 0.999
+            "beta2": 0.999,
+            "eps": 0.01
         },
         "representation": {
             "type": "ForagerNet",
