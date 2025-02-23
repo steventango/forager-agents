@@ -34,7 +34,7 @@ class Onion(ForagerObject):
         return -1
 
 
-class ForagerBig(BaseEnvironment):
+class ForagerExtraLarge(BaseEnvironment):
     def __init__(self, seed: int, aperture: int):
         config = ForagerConfig(
             size=(1000, 1000),
