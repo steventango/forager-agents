@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.getcwd() + '/src')
 
 import numpy as np
@@ -19,6 +20,7 @@ import RlEvaluation.metrics as Metrics
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
 from experiment.tools import parseCmdLineArgs
+from experiment.hypers import update_best_config
 
 # makes sure figures are right size for the paper/column widths
 # also sets fonts to be right size when saving
@@ -82,6 +84,8 @@ if __name__ == "__main__":
             print('-' * 25)
             print(env, alg)
             Hypers.pretty_print(report)
+
+            update_best_config(alg, report, __file__)
 
             result = next(results)
             exp = result.exp
