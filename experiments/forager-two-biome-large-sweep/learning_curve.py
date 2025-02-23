@@ -76,64 +76,67 @@ if __name__ == "__main__":
     exp = results.get_any_exp()
 
     f, ax = plt.subplots()
-    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: int(x[0].split('-')[1])):
-        if len(sub_df) == 0: continue
+    for gamma, select_df in split_over_column(df, col='gamma'):
+        if gamma != .99:
+            continue
+        for alg, sub_df in sorted(split_over_column(select_df, col='algorithm'), key=lambda x: int(x[0].split('-')[1])):
+            if len(sub_df) == 0: continue
 
-        report = Hypers.select_best_hypers(
-            sub_df,
-            metric=METRIC,
-            prefer=Hypers.Preference.high,
-            time_summary=TimeSummary.sum,
-            statistic=Statistic.mean,
-        )
+            report = Hypers.select_best_hypers(
+                sub_df,
+                metric=METRIC,
+                prefer=Hypers.Preference.high,
+                time_summary=TimeSummary.sum,
+                statistic=Statistic.mean,
+            )
 
-        print('-' * 25)
-        print(alg)
-        Hypers.pretty_print(report)
+            print('-' * 25)
+            print(alg)
+            Hypers.pretty_print(report)
 
-        update_best_config(alg, report, __file__)
+            update_best_config(alg, report, __file__)
 
-        xs, ys = extract_learning_curves(
-            sub_df,
-            report.best_configuration,
-            metric=METRIC,
-            interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
-        )
+            xs, ys = extract_learning_curves(
+                sub_df,
+                report.best_configuration,
+                metric=METRIC,
+                interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
+            )
 
-        xs = np.asarray(xs)[:, ::SUBSAMPLE]
-        ys = np.asarray(ys)[:, ::SUBSAMPLE]
-        print(xs.shape, ys.shape)
+            xs = np.asarray(xs)[:, ::SUBSAMPLE]
+            ys = np.asarray(ys)[:, ::SUBSAMPLE]
+            print(xs.shape, ys.shape)
 
-        # make sure all of the x values are the same for each curve
-        assert np.all(np.isclose(xs[0], xs))
+            # make sure all of the x values are the same for each curve
+            assert np.all(np.isclose(xs[0], xs))
 
-        res = curve_percentile_bootstrap_ci(
-            rng=np.random.default_rng(0),
-            y=ys,
-            statistic=Statistic.mean,
-        )
+            res = curve_percentile_bootstrap_ci(
+                rng=np.random.default_rng(0),
+                y=ys,
+                statistic=Statistic.mean,
+            )
 
-        ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
-        if len(ys) <= 5:
-            for x, y in zip(xs, ys):
-                ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
+            ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
+            if len(ys) <= 5:
+                for x, y in zip(xs, ys):
+                    ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
+            else:
+                ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
+            ax.set_xlabel('Steps')
+            ax.set_ylabel('Average Reward')
+
+        ax.legend()
+
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        if should_save:
+            save(
+                save_path=f'{path}/plots',
+                plot_name=f'learning_curve',
+                save_type=save_type,
+            )
+            plt.clf()
         else:
-            ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-        ax.set_xlabel('Steps')
-        ax.set_ylabel('Average Reward')
-
-    ax.legend()
-
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    if should_save:
-        save(
-            save_path=f'{path}/plots',
-            plot_name=f'learning_curve',
-            save_type=save_type,
-        )
-        plt.clf()
-    else:
-        plt.show()
-        exit()
+            plt.show()
+            exit()
