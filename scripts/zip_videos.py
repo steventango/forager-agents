@@ -11,7 +11,7 @@ def zip_videos(pattern, output_zip):
             video_path = Path(video)
             parts = video_path.parts
             print(parts)
-            new_name = f"{parts[2]}-{parts[3]}-{parts[4]}-{parts[5]}"
+            new_name = f"{parts[-4]}-{parts[-3]}-{parts[-2]}-{parts[-1]}"
             f.write(video, new_name)
 
 if __name__ == "__main__":
