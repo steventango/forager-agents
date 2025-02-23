@@ -21,4 +21,4 @@ class ForagerExtraLarge(BaseProblem):
         num_objects = len(self.env.env._names)
 
         self.observations = (ap_x, ap_y, num_objects)
-        self.gamma = 0.9
+        self.gamma = 0.99

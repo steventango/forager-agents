@@ -42,7 +42,7 @@ items.append(
 )
 
 
-class JellybeanWorldBig(BaseEnvironment):
+class JellybeanWorldExtraLarge(BaseEnvironment):
     def __init__(self, seed):
         self.config = jbw.SimulatorConfig(
             max_steps_per_movement=1,
