@@ -1,12 +1,12 @@
 {
     "agent": "DQN",
     "problem": "JellybeanWorldExtraLarge",
-    "total_steps": 10000000,
+    "total_steps": 100000,
     "episode_cutoff": -1,
     "metaParameters": {
         "initial_epsilon": 1,
         "final_epsilon": 0.05,
-        "epsilon_steps": 8000000,
+        "epsilon_steps": 80000,
         "target_refresh": 128,
         "buffer_type": "uniform",
         "buffer_size": 10000,
