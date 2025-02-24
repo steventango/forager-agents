@@ -1,0 +1,14 @@
+{
+    "agent": "Random",
+    "problem": "ForagerExtraLarge",
+    "total_steps": 10000000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "environment": {
+            "aperture": 11
+        },
+        "experiment": {
+            "seed_offset": 0
+        }
+    }
+}

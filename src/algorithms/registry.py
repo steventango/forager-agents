@@ -1,6 +1,7 @@
 from typing import Type
 from algorithms.BaseAgent import BaseAgent
 
+from algorithms.RandomAgent import RandomAgent
 from algorithms.nn.DQN import DQN
 from algorithms.nn.EQRC import EQRC
 
@@ -19,5 +20,8 @@ def getAgent(name) -> Type[BaseAgent]:
 
     if name == 'SoftmaxAC':
         return SoftmaxAC
+
+    if name == 'Random':
+        return RandomAgent
 
     raise Exception('Unknown algorithm')
