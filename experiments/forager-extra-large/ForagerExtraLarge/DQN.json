@@ -22,16 +22,10 @@
         },
         "optimizer": {
             "name": "ADAM",
-            "alpha": [
-                0.001,
-                0.0003,
-                0.0001,
-                0.00003,
-                0.00001
-            ],
+            "alpha": 0.001,
             "beta1": 0.9,
             "beta2": 0.999,
-            "eps": 1e-8
+            "eps": 1e-08
         },
         "representation": {
             "type": "ForagerNet",
