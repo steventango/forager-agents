@@ -1,0 +1,14 @@
+{
+    "agent": "Random",
+    "problem": "JellybeanWorldExtraLarge",
+    "total_steps": 10000000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "environment": {
+            "aperture": 1
+        },
+        "experiment": {
+            "seed_offset": 0
+        }
+    }
+}
