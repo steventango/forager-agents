@@ -132,9 +132,6 @@ for idx in indices:
             avg_reward = collector.get_last('reward')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
 
-        if step % 1000:
-            gc.collect()
-
         if step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
             rgb_array = env.render()
             image = Image.fromarray(rgb_array)
