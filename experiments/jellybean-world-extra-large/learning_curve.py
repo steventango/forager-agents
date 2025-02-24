@@ -1,20 +1,23 @@
 import os
 import sys
+
 sys.path.append(os.getcwd() + '/src')
 
-import numpy as np
 import matplotlib.pyplot as plt
-from PyExpPlotting.matplot import save, setDefaultConference
-from PyExpUtils.results.Collection import ResultCollection
-
-from RlEvaluation.config import data_definition
-from RlEvaluation.interpolation import compute_step_return
-from RlEvaluation.temporal import TimeSummary, extract_multiple_learning_curves, curve_percentile_bootstrap_ci
-from RlEvaluation.statistics import Statistic
-from RlEvaluation.utils.pandas import split_over_column
-
+import numpy as np
 import RlEvaluation.hypers as Hypers
 import RlEvaluation.metrics as Metrics
+from PyExpPlotting.matplot import save, setDefaultConference, setFonts
+from PyExpUtils.results.Collection import ResultCollection
+from RlEvaluation.config import data_definition
+from RlEvaluation.interpolation import compute_step_return
+from RlEvaluation.statistics import Statistic
+from RlEvaluation.temporal import (
+    TimeSummary,
+    curve_percentile_bootstrap_ci,
+    extract_multiple_learning_curves,
+)
+from RlEvaluation.utils.pandas import split_over_column
 
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
@@ -23,6 +26,7 @@ from experiment.tools import parseCmdLineArgs
 # makes sure figures are right size for the paper/column widths
 # also sets fonts to be right size when saving
 setDefaultConference('jmlr')
+setFonts(20)
 
 COLORS = {
     'DQN': 'blue',
@@ -32,7 +36,7 @@ COLORS = {
 
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-POINTS = 1000
+POINTS = 500
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -111,6 +115,7 @@ if __name__ == "__main__":
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
             ax.set_xlabel('Steps')
             ax.set_ylabel('Average Reward')
+            ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
         # despine
         ax.spines['top'].set_visible(False)
