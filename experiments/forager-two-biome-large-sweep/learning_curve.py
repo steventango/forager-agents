@@ -36,6 +36,7 @@ COLORS = {
     'DQN-11': '#b260ff',
     'DQN-13': '#d72dff',
     'DQN-15': '#ff00ff',
+    'Random': '#000000',
 }
 
 METRIC = "reward"

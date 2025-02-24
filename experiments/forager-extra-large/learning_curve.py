@@ -27,6 +27,7 @@ setDefaultConference('jmlr')
 COLORS = {
     'DQN': 'blue',
     # 'DQN': 'red',
+    'Random': '#000000',
 }
 
 METRIC = "reward"
