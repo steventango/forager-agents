@@ -37,7 +37,7 @@ COLORS = {
 
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-SUBSAMPLE = 10
+POINTS = 1000
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -97,8 +97,9 @@ if __name__ == "__main__":
             interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
         )
 
-        xs = np.asarray(xs)[:, ::SUBSAMPLE]
-        ys = np.asarray(ys)[:, ::SUBSAMPLE]
+        subsample = len(xs[0]) // POINTS
+        xs = np.asarray(xs)[:, ::subsample]
+        ys = np.asarray(ys)[:, ::subsample]
         print(xs.shape, ys.shape)
 
         # make sure all of the x values are the same for each curve
