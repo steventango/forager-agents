@@ -15,7 +15,7 @@
         "n_step": 1,
         "update_freq": 4,
         "experiment": {
-            "seed_offset": 1000000
+            "seed_offset": 0
         },
         "optimizer": {
             "name": "ADAM",

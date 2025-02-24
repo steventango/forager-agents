@@ -18,7 +18,7 @@
             "aperture": 11
         },
         "experiment": {
-            "seed_offset": 1000000
+            "seed_offset": 0
         },
         "optimizer": {
             "name": "ADAM",
