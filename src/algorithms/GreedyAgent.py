@@ -166,11 +166,16 @@ class GreedyAgent(BaseAgent):
         else:
             self.a_map = {'up': 2, 'right': 1, 'down': 0, 'left': 3}
             self.wrapped_world = True
-
-        self.target_objects = params.get('target_objects', ['morel', 'oyster'])
-        self.target_channels = self._get_target_channels()
-        self.target_values = list(range(2, 2 + len(self.target_channels)))
-
+        
+        # object_priority: mapping from object name to its assigned value (1 = obstacle, >1 = target)
+        # object_channel: mapping from object name to its channel index in the observation
+        self.object_priority: Dict[str, int] = self.env_params.get('object_priority', {})
+        self.object_channel: Dict[str, int] = self.env_params.get('object_channel', {})
+        
+        # Determine valid target values (i.e. priority values > 1) sorted in ascending order (lowest means highest priority)
+        self.target_values: List[int] = sorted([prio for prio in self.object_priority.values() if prio > 1])
+        
+        # Initialize state variables.
         self.current_goal = None
         self.current_path: List[int] = []
         self.current_goal_priority = None
@@ -182,57 +187,34 @@ class GreedyAgent(BaseAgent):
         self.last_state = None
         self.step_count = 0
 
-    def _get_target_channels(self) -> List[int]:
-        target_channels = []
-        target_channel_init = int(self.observation_mode == 'world')
-        objects = self.env_params.get('objects', {})
-
-        for target in self.target_objects:
-            found = False
-            for i, key in enumerate(objects.keys()):
-                if key == target:
-                    target_channels.append(target_channel_init + i)
-                    found = True
-                    print(objects)
-                    print(f'Found target object "{target}" in channel {target_channels[-1]}')
-                    break
-            if not found:
-                print(f'Warning: Target object "{target}" not found.')
-        if not target_channels:
-            print('Warning: No target objects found. Using default channel.')
-            target_channels = [target_channel_init]
-
-        print(f'Target channels: {target_channels}')
-        return target_channels
-
     def transform(self, x: np.ndarray) -> np.ndarray:
         """
-        Transforms a multi-channel observation into a single state matrix:
-          - 0: empty space
-          - 1: obstacle/wall
-          - 2+: target objects (with lower numbers indicating higher priority)
+        Transforms a multi-channel observation into a 2D state matrix.
+        Each cell is assigned a value based on object_priority and object_channel.
+        0 means empty, 1 means obstacle, and values > 1 denote targets.
         """
-        state = np.zeros((self.aperture, self.aperture))
-        for channel in range(x.shape[2]):
-            if self.step_count % 1000 == 0:
-                assert np.all(state * x[:, :, channel] == 0), f'Channel {channel} is not disjoint'
-
-            if channel == 0 and self.observation_mode == 'world':
-                agent_pos = np.where(x[:, :, channel] == 1)
+        state = np.zeros((self.aperture, self.aperture), dtype=int)
+        
+        # In world mode, assume channel 0 encodes the agent's position.
+        if self.observation_mode == 'world':
+            agent_pos = np.where(x[:, :, 0] == 1)
+            if len(agent_pos[0]) > 0:
                 self.starting_pos = (agent_pos[0][0], agent_pos[1][0])
-                continue
-
-            if channel in self.target_channels:
-                target_idx = self.target_channels.index(channel)
-                state += x[:, :, channel] * (2 + target_idx)
-            else:
-                state += x[:, :, channel]
+        
+        # Process each object type according to its channel and priority.
+        for obj, prio in self.object_priority.items():
+            if obj in self.object_channel:
+                channel = self.object_channel[obj]
+                mask = x[:, :, channel] > 0
+                # If a cell already has a value, choose the minimum (i.e. highest priority) in case of conflict.
+                state[mask] = np.where(state[mask] == 0, prio, np.minimum(state[mask], prio))
         return state
 
     def start(self, x: np.ndarray) -> int:
         if self.aperture is None:
             self.aperture = x.shape[0]
-            self.starting_pos = (self.aperture // 2, self.aperture // 2)
+            if self.starting_pos is None:
+                self.starting_pos = (self.aperture // 2, self.aperture // 2)
         return self.step(0, x, {})
 
     def _check_for_better_goal(self, state: np.ndarray) -> bool:
@@ -275,7 +257,7 @@ class GreedyAgent(BaseAgent):
                 action = avoid_wall_random(state, self.starting_pos, self.a_map)
             elif self.explore_strategy == 'trace':
                 highest = np.argmax(self.action_trace)
-                hit_wall = np.array_equal(state, self.last_state)
+                hit_wall = np.array_equal(state, self.last_state) if self.last_state is not None else False
                 if highest == self.last_action or hit_wall:
                     self.action_trace[self.last_action] *= self.explore_pump
                 action = (1 if self.action_trace[1] < self.action_trace[3] else 3) if highest in [0, 2] else \
@@ -311,9 +293,9 @@ class GreedyAgent(BaseAgent):
                 print("  -1: Agent position")
                 print("   0: Empty space")
                 print("   1: Obstacle/wall")
-                for i, target in enumerate(self.target_objects):
-                    if i < len(self.target_channels):
-                        print(f"   {i + 2}: {target}")
+                for obj, prio in self.object_priority.items():
+                    if prio > 1:
+                        print(f"   {prio}: {obj}")
                 for row in display_x:
                     print(' '.join(str(int(col)) for col in row))
                 print()
@@ -321,10 +303,14 @@ class GreedyAgent(BaseAgent):
                 for channel in range(x.shape[2]):
                     if channel == 0 and self.observation_mode == 'world':
                         channel_name = "Agent"
-                    elif channel in self.target_channels:
-                        channel_name = self.target_objects[self.target_channels.index(channel)]
                     else:
-                        channel_name = f"Channel {channel}"
+                        channel_name = None
+                        for obj, ch in self.object_channel.items():
+                            if ch == channel:
+                                channel_name = obj
+                                break
+                        if channel_name is None:
+                            channel_name = f"Channel {channel}"
                     print(f'{channel_name}:')
                     for row in x[:, :, channel]:
                         print(' '.join(str(int(col)) for col in row))

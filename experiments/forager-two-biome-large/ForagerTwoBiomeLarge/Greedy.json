@@ -8,10 +8,15 @@
             "aperture": 15
         },
         "env_info": {
-            "objects": {
-                "morel": 0.5,
-                "oyster": 0.5,
-                "deathcap": 0.25
+            "object_channel": {
+                "morel": 1,
+                "oyster": 2,
+                "deathcap": 0
+            },
+            "object_priority": {
+                "morel": 2,
+                "oyster": 3,
+                "deathcap": 1
             }
         },
         "experiment": {
