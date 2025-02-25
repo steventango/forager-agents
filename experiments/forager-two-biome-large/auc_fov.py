@@ -29,7 +29,8 @@ setDefaultConference('jmlr')
 setFonts(20)
 
 METRIC = "reward"
-COLOR = "#4285f4"
+LAST_PERCENT = 0.1
+gdm_colors = ["#4285f4", "#ff902a", "#34a853", "#ea4335", "#fbbc04", "#2daeb8"]
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     auc = []
     auc_ci_low = []
     auc_ci_high = []
+    special = {}
     for env, env_df in sorted(split_over_column(df, col='environment.aperture'), key=lambda x: x[0]):
         for alg, sub_df in sorted(split_over_column(env_df, col='algorithm'), key=lambda x: x[0]):
             if len(sub_df) == 0: continue
@@ -92,12 +94,20 @@ if __name__ == "__main__":
                 interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
             )
 
-            xs = np.asarray(xs).mean(axis=1)
-            ys = np.asarray(ys).mean(axis=1)
-            print(xs.shape, ys.shape)
+            xs = np.asarray(xs)
+            ys = np.asarray(ys)
 
             # make sure all of the x values are the same for each curve
             assert np.all(np.isclose(xs[0], xs))
+
+            print(xs.shape, ys.shape)
+            last_idx = int((1 - LAST_PERCENT) * xs.shape[1])
+            xs = xs[:, last_idx:]
+            ys = ys[:, last_idx:]
+            print(xs.shape, ys.shape)
+            xs = xs.mean(axis=1, keepdims=True)
+            ys = ys.mean(axis=1, keepdims=True)
+            print(xs.shape, ys.shape)
 
             res = curve_percentile_bootstrap_ci(
                 rng=np.random.default_rng(0),
@@ -105,18 +115,31 @@ if __name__ == "__main__":
                 statistic=Statistic.mean,
             )
 
-            apertures.append(env)
-            auc.append(res.sample_stat.mean())
-            auc_ci_low.append(res.ci[0].mean())
-            auc_ci_high.append(res.ci[1].mean())
+            if alg.startswith("DQN"):
+                apertures.append(env)
+                auc.append(res.sample_stat)
+                auc_ci_low.extend(res.ci[0])
+                auc_ci_high.extend(res.ci[1])
+            else:
+                special[alg] = res
 
-    ax.plot(apertures, auc, label='Mean', color=COLOR, linewidth=0.5)
-    ax.fill_between(apertures, auc_ci_low, auc_ci_high, color=COLOR, alpha=0.2)
+
+
+    ax.plot(apertures, auc, label='DQN', color=gdm_colors[0], linewidth=1)
+    ax.fill_between(apertures, auc_ci_low, auc_ci_high, color=gdm_colors[0], alpha=0.2)
+
+    for (alg, report), color in zip(sorted(special.items(), key=lambda x: x[0]), gdm_colors[1:]):
+        if alg == "Greedy":
+            alg = "Search Oracle"
+        ax.plot(apertures, [report.sample_stat] * len(apertures), label=alg, color=color, linewidth=1)
+        ax.fill_between(apertures, report.ci[0], report.ci[1], color=color, alpha=0.4)
+
     ax.set_xlabel('Field of View')
-    ax.set_ylabel('AUC')
-    ax.set_xticklabels(['Random'] + [str(int(x)) for x in apertures[1:-1]] + ['Greedy'])
+    ax.set_ylabel('Average Reward AUC Last 10%')
+    ax.set_xticks(apertures)
+    ax.set_xticklabels([str(int(x)) for x in apertures])
 
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ax.legend()
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
