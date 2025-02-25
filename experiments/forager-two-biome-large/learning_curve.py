@@ -37,6 +37,7 @@ COLORS = {
     'DQN-13': '#d72dff',
     'DQN-15': '#ff00ff',
     'Random': '#000000',
+    'Greedy': '#00ff00',
 }
 
 METRIC = "reward"
@@ -78,7 +79,7 @@ if __name__ == "__main__":
 
     f, ax = plt.subplots()
     for env, env_df in sorted(split_over_column(df, col='environment.aperture'), key=lambda x: x[0]):
-        for alg, sub_df in split_over_column(env_df, col='algorithm'):
+        for alg, sub_df in sorted(split_over_column(env_df, col='algorithm'), key=lambda x: x[0]):
             if len(sub_df) == 0: continue
 
             report = Hypers.select_best_hypers(

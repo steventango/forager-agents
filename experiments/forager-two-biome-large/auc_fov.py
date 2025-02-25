@@ -70,7 +70,7 @@ if __name__ == "__main__":
     auc_ci_low = []
     auc_ci_high = []
     for env, env_df in sorted(split_over_column(df, col='environment.aperture'), key=lambda x: x[0]):
-        for alg, sub_df in split_over_column(env_df, col='algorithm'):
+        for alg, sub_df in sorted(split_over_column(env_df, col='algorithm'), key=lambda x: x[0]):
             if len(sub_df) == 0: continue
 
             report = Hypers.select_best_hypers(
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     ax.fill_between(apertures, auc_ci_low, auc_ci_high, color=COLOR, alpha=0.2)
     ax.set_xlabel('Field of View')
     ax.set_ylabel('AUC')
-    ax.set_xticklabels(['Random'] + [str(int(x)) for x in apertures[1:]])
+    ax.set_xticklabels(['Random'] + [str(int(x)) for x in apertures[1:-1]] + ['Greedy'])
 
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
