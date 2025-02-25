@@ -19,13 +19,11 @@ classifiers = [
 ]
 dependencies = [
     # custom minatar with jit compiled environments
-    'MinAtar @ git+https://github.com/andnp/MinAtar',
     'foragerenv @ git+https://github.com/steventango/forager',
     'jbw @ git+https://git@github.com/eaplatanios/jelly-bean-world@77ddf5fc0bbe81c795c96b250f380c22230491a7#subdirectory=api/python',
 
-    'gymnasium[atari, box2d]>=1.0.0',
+    'gymnasium>=1.0.0',
     'optuna',
-    'ale_py',
     'pillow',
     'numba>=0.55.0',
     'chex>=0.1.5',
