@@ -5,7 +5,7 @@
 
 module load python/3.11 rust
 
-cp $path/requirements.txt $SLURM_TMPDIR/
+cp $path/pyproject.toml $SLURM_TMPDIR/
 cd $SLURM_TMPDIR
 python -m venv .venv
 source .venv/bin/activate
