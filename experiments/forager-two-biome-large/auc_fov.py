@@ -28,20 +28,8 @@ from experiment.tools import parseCmdLineArgs
 setDefaultConference('jmlr')
 setFonts(20)
 
-COLORS = {
-    'DQN-3': '#00ffff',
-    'DQN-5': '#3ddcff',
-    'DQN-7': '#57abff',
-    'DQN-9': '#8b8cff',
-    'DQN-11': '#b260ff',
-    'DQN-13': '#d72dff',
-    'DQN-15': '#ff00ff',
-    'Random': '#000000',
-}
-
 METRIC = "reward"
-# keep 1 in every SUBSAMPLE measurements
-POINTS = 500
+COLOR = "#4285f4"
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -77,6 +65,10 @@ if __name__ == "__main__":
     exp = results.get_any_exp()
 
     f, ax = plt.subplots()
+    apertures = []
+    auc = []
+    auc_ci_low = []
+    auc_ci_high = []
     for env, env_df in sorted(split_over_column(df, col='environment.aperture'), key=lambda x: x[0]):
         for alg, sub_df in split_over_column(env_df, col='algorithm'):
             if len(sub_df) == 0: continue
@@ -100,9 +92,8 @@ if __name__ == "__main__":
                 interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
             )
 
-            subsample = len(xs[0]) // POINTS
-            xs = np.asarray(xs)[:, ::subsample]
-            ys = np.asarray(ys)[:, ::subsample]
+            xs = np.asarray(xs).mean(axis=1)
+            ys = np.asarray(ys).mean(axis=1)
             print(xs.shape, ys.shape)
 
             # make sure all of the x values are the same for each curve
@@ -114,15 +105,16 @@ if __name__ == "__main__":
                 statistic=Statistic.mean,
             )
 
-            ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
-            if len(ys) <= 5:
-                for x, y in zip(xs, ys):
-                    ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
-            else:
-                ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-            ax.set_xlabel('Steps')
-            ax.set_ylabel('Average Reward')
-            ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
+            apertures.append(env)
+            auc.append(res.sample_stat.mean())
+            auc_ci_low.append(res.ci[0].mean())
+            auc_ci_high.append(res.ci[1].mean())
+
+    ax.plot(apertures, auc, label='Mean', color=COLOR, linewidth=0.5)
+    ax.fill_between(apertures, auc_ci_low, auc_ci_high, color=COLOR, alpha=0.2)
+    ax.set_xlabel('Field of View')
+    ax.set_ylabel('AUC')
+    ax.set_xticklabels(['Random'] + [str(int(x)) for x in apertures[1:]])
 
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
@@ -132,10 +124,8 @@ if __name__ == "__main__":
     if should_save:
         save(
             save_path=f'{path}/plots',
-            plot_name=f'learning_curve',
+            plot_name=f'auc_fov',
             save_type=save_type,
-            width=1.2,
-            height_ratio=1 / 1.2,
         )
         plt.clf()
     else:
