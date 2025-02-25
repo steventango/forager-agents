@@ -1,0 +1,21 @@
+{
+    "agent": "Greedy",
+    "problem": "ForagerTwoBiomeLarge",
+    "total_steps": 500000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "environment": {
+            "aperture": 15
+        },
+        "env_info": {
+            "objects": {
+                "morel": 0.5,
+                "oyster": 0.5,
+                "deathcap": 0.25
+            }
+        },
+        "experiment": {
+            "seed_offset": 0
+        }
+    }
+}
