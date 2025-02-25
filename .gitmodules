@@ -1,0 +1,3 @@
+[submodule "jelly-bean-world"]
+	path = jelly-bean-world
+	url = git@github.com:eaplatanios/jelly-bean-world.git

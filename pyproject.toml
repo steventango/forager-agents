@@ -20,7 +20,6 @@ classifiers = [
 dependencies = [
     # custom minatar with jit compiled environments
     'foragerenv @ git+https://github.com/steventango/forager',
-    'jbw @ git+https://git@github.com/eaplatanios/jelly-bean-world@77ddf5fc0bbe81c795c96b250f380c22230491a7#subdirectory=api/python',
 
     'gymnasium>=1.0.0',
     'optuna',

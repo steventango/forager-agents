@@ -8,10 +8,14 @@ set -e
 module load python/3.11 rust
 
 cp $path/pyproject.toml $SLURM_TMPDIR/
+cp -R $path/jelly-bean-world $SLURM_TMPDIR/
 cd $SLURM_TMPDIR
 python -m venv .venv
 source .venv/bin/activate
 pip install .
+
+cd jelly-bean-world/api/python
+python setup.py install
 
 # TODO: for some reason, pip cannot install any of the current wheels for this package.
 # this is a pretty bad hack, but...
