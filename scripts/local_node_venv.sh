@@ -3,6 +3,8 @@
 #SBATCH --time=00:55:00
 #SBATCH --account=rrg-whitem
 
+set -e
+
 module load python/3.11 rust
 
 cp $path/pyproject.toml $SLURM_TMPDIR/
