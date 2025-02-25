@@ -3,29 +3,8 @@ from typing import Any
 import numpy as np
 from forager.config import ForagerConfig
 from forager.Env import ForagerEnv
-from forager.interface import Coords
-from forager.objects import DeathCap, Morel, Oyster
+from forager.objects import LargeDeathCap, LargeMorel, LargeOyster
 from RlGlue import BaseEnvironment
-
-
-class Morel2(Morel):
-    def regen_delay(self, rng: np.random.Generator, clock: int) -> int | None:
-        self.target_location = self.current_location
-        return int(max(0, rng.normal(300, 30)))
-
-    def reward(self, rng: np.random.Generator, clock: int) -> float:
-        return 30
-
-class Oyster2(Oyster):
-    def regen_delay(self, rng: np.random.Generator, clock: int) -> int | None:
-        self.target_location = self.current_location
-        return int(max(0, rng.normal(10, 1)))
-
-
-class DeathCap2(DeathCap):
-    def regen_delay(self, rng: np.random.Generator, clock: int) -> int | None:
-        self.target_location = self.current_location
-        return int(max(0, rng.normal(10, 1)))
 
 
 class ForagerTwoBiomeLarge(BaseEnvironment):
@@ -33,9 +12,9 @@ class ForagerTwoBiomeLarge(BaseEnvironment):
         config = ForagerConfig(
             size=(15, 15),
             object_types={
-                "morel": Morel2,
-                "oyster": Oyster2,
-                "deathcap": DeathCap2,
+                "deathcap": LargeDeathCap,
+                "morel": LargeMorel,
+                "oyster": LargeOyster,
             },
             aperture=aperture,
             seed=seed,
