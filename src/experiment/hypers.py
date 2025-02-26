@@ -3,6 +3,7 @@ import json
 import os
 
 import numpy as np
+import pandas as pd
 from RlEvaluation.hypers import HyperSelectionResult
 
 
@@ -16,6 +17,8 @@ def update_best_config(alg: str, report: HyperSelectionResult, file: str):
         config = json.load(f)
 
     for config_param, best_config in zip(report.config_params, report.best_configuration):
+        if pd.isnull(best_config):
+            continue
         parts = config_param.split(".")
         curr = config["metaParameters"]
         curr_sweep = sweep_config["metaParameters"]
