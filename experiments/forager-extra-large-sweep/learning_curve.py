@@ -31,7 +31,7 @@ setFonts(20)
 
 COLORS = {
     'DQN': 'blue',
-    # 'DQN': 'red',
+    'SAC': 'red',
     'Random': '#000000',
 }
 
@@ -134,8 +134,6 @@ if __name__ == "__main__":
                 save_path=f'{path}/plots',
                 plot_name=f'learning_curve',
                 save_type=save_type,
-                width=1.2,
-                height_ratio=1 / 1.2,
             )
             plt.clf()
         else:
