@@ -20,7 +20,7 @@ def getAgent(name) -> Type[BaseAgent]:
     if name == 'Random':
         return RandomAgent
 
-    if name == 'Greedy':
+    if name.startswith('Greedy'):
         return GreedyAgent
 
     raise Exception('Unknown algorithm')

@@ -1,22 +1,20 @@
 {
     "agent": "Greedy",
-    "problem": "ForagerTwoBiomeLarge",
-    "total_steps": 500000,
+    "problem": "ForagerExtraLarge",
+    "total_steps": 10000000,
     "episode_cutoff": -1,
     "metaParameters": {
         "environment": {
-            "aperture": 15
+            "aperture": 11
         },
         "env_info": {
             "object_channel": {
-                "deathcap": 0,
-                "morel": 1,
-                "oyster": 2
+                "jellybean": 0,
+                "onion": 1
             },
             "object_priority": {
-                "deathcap": 1,
-                "morel": 2,
-                "oyster": 2
+                "jellybean": 2,
+                "onion": 1
             }
         },
         "experiment": {
