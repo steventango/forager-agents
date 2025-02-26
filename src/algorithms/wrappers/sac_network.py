@@ -11,7 +11,7 @@ def forager_network(x, hidden_units):
     bias_initializer = jax.nn.initializers.constant(0)
 
     x = nn.Conv(
-        features=32,
+        features=16,
         kernel_size=(3, 3),
         strides=(1, 1),
         kernel_init=kernel_initializer)(x)
