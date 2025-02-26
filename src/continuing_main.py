@@ -65,6 +65,11 @@ Problem = getProblem(exp.problem)
 for idx in indices:
     chk = Checkpoint(exp, idx, base_path=args.checkpoint_path, save_every=120)
     chk.load_if_exists()
+
+    # Test checkpointing (fail early if it doesn't work)
+    chk.save()
+    chk.delete()
+
     timeout_handler.before_cancel(chk.save)
 
     collector = chk.build('collector', lambda: Collector(
