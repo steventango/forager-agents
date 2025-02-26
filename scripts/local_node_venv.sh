@@ -16,6 +16,7 @@ pip install .
 
 cd jelly-bean-world/api/python
 python setup.py install
+cd $SLURM_TMPDIR
 
 # TODO: for some reason, pip cannot install any of the current wheels for this package.
 # this is a pretty bad hack, but...
