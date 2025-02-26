@@ -1,0 +1,31 @@
+{
+    "agent": "SAC",
+    "problem": "JellybeanWorldExtraLarge",
+    "total_steps": 10000000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "buffer_type": "uniform",
+        "buffer_size": 10000,
+        "batch": 32,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "min_replay_history": 500,
+        "entropy_coeff": 0.05,
+        "n_step": 1,
+        "update_freq": 4,
+        "experiment": {
+            "seed_offset": 0
+        },
+        "optimizer": {
+            "name": "ADAM",
+            "alpha": 0.001,
+            "beta1": 0.9,
+            "beta2": 0.999,
+            "eps": 1e-08
+        },
+        "representation": {
+            "type": "ForagerNet",
+            "hidden": 64
+        }
+    }
+}

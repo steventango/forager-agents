@@ -31,7 +31,7 @@ setFonts(20)
 
 COLORS = {
     'DQN': 'blue',
-    # 'DQN': 'red',
+    'SAC': 'red',
     'Random': '#000000',
 }
 
