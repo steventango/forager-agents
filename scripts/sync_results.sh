@@ -1,1 +1,1 @@
-rsync -azP cedar:/home/stang5/projects/def-amw8/stang5/forager-agents/results/ results/
+rsync -azP cedar:scratch/forager-agents/results/ results/
