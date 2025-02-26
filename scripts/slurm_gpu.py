@@ -40,7 +40,7 @@ def getJobScript(parallel):
     return f"""#!/bin/bash
 
 #SBATCH --signal=B:SIGTERM@180
-#SBATCH --gpus-per-node=1
+#SBATCH --gpus-per-node=p100:1
 
 cd {cwd}
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 tar -xf {venv_origin} -C {venv}
