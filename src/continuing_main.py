@@ -110,7 +110,7 @@ for idx in indices:
         glue.start()
 
     recorded_frames = []
-    video_frequency = 50000
+    video_frequency = int(0.1 * exp.total_steps)
     video_length = 1000
 
     with open(path + '/hypers.json', 'w') as f:
