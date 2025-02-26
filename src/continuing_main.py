@@ -122,6 +122,11 @@ for idx in indices:
         hypers["run"] = run
         json.dump(hypers, f, indent=2)
 
+    rgb_array = env.render()
+    image = Image.fromarray(rgb_array)
+    image = image.resize((rgb_array.shape[1] * 10, rgb_array.shape[0] * 10), Image.NEAREST)
+    image.save(path + f"/env.png")
+
     for step in tqdm(range(glue.total_steps, exp.total_steps)):
         collector.next_frame()
         chk.maybe_save()
