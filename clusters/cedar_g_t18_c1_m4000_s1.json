@@ -1,0 +1,9 @@
+{
+    "type": "single_node",
+
+    "account": "rrg-whitem",
+    "time": "17:59:00",
+    "cores": 1,
+    "mem_per_core": "4000M",
+    "sequential": 1
+}
