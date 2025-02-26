@@ -2,9 +2,9 @@ import os
 import json
 import time
 import shutil
-import pickle
 import logging
 from typing import Any, Callable, Dict, Optional, Sequence, Type, TypeVar, Protocol
+import dill
 from PyExpUtils.models.ExperimentDescription import ExperimentDescription
 
 T = TypeVar('T')
@@ -58,7 +58,7 @@ class Checkpoint:
 
         data_path = self._ctx.ensureExists(self._data_path, is_file=True)
         with open(data_path, 'wb') as f:
-            pickle.dump(self._storage, f)
+            dill.dump(self._storage, f)
 
         logging.info('Finished dumping checkpoint')
 
@@ -94,7 +94,7 @@ class Checkpoint:
         path = self._ctx.resolve(self._data_path)
         try:
             with open(path, 'rb') as f:
-                self._storage = pickle.load(f)
+                self._storage = dill.load(f)
         except Exception as e:
             print(f'Failed to load checkpoint: {path}')
             print(e)
