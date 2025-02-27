@@ -30,9 +30,9 @@ setFonts(20)
 
 COLORS = {
     'DQN': 'blue',
-    # 'DQN': 'red',
-    'Random': '#000000',
-    'Greedy': '#00FF00',
+    'Greedy': 'green',
+    'SAC': 'red',
+    'Random': 'black',
 }
 
 METRIC = "reward"
@@ -76,6 +76,9 @@ if __name__ == "__main__":
         f, ax = plt.subplots()
         for alg, sub_df in split_over_column(env_df, col='algorithm'):
             if len(sub_df) == 0: continue
+
+            if alg == "SAC":
+                continue
 
             report = Hypers.select_best_hypers(
                 sub_df,
