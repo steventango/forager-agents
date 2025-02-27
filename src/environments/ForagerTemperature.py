@@ -72,13 +72,13 @@ def cold_factory(rewards: np.ndarray, repeat: int) -> ObjectFactory:
 class ForagerTemperature(BaseEnvironment):
     def __init__(self, seed: int, aperture: int):
         assert 0 <= seed < len(FILE_PATHS)
-        rewards = load_data(FILE_PATHS[seed])
-        repeat = 100
+        self.rewards = load_data(FILE_PATHS[seed])
+        self.repeat = 100
         config = ForagerConfig(
             size=(15, 15),
             object_types={
-                "hot": hot_factory(rewards, repeat),
-                "cold": cold_factory(-rewards, repeat),
+                "hot": hot_factory(self.rewards, self.repeat),
+                "cold": cold_factory(-self.rewards, self.repeat),
             },
             aperture=aperture,
             seed=seed,
@@ -98,4 +98,10 @@ class ForagerTemperature(BaseEnvironment):
         return (r, obs.astype(np.float32), False, {})
 
     def render(self):
-        return self.env.render(mode="world")
+        rgb_array = self.env.render(mode="world")
+        black_line = np.zeros((1, *rgb_array.shape[1:]), dtype=np.uint8)
+        temperature = self.rewards[self.env._clock // self.repeat % len(self.rewards)]
+        temperature_line = np.clip((temperature + 1) / 2, 0, 1) * np.array([255, 0, 255]) + (1 - np.clip((temperature + 1) / 2, 0, 1)) * np.array([0, 255, 255])
+        temperature_line = np.tile(temperature_line, (1, rgb_array.shape[1], 1)).astype(np.uint8)
+        rgb_array = np.vstack((rgb_array, black_line, temperature_line))
+        return rgb_array
