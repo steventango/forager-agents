@@ -30,19 +30,12 @@ setDefaultConference('jmlr')
 setFonts(20)
 
 COLORS = {
-    'DQN-3': '#00ffff',
-    'DQN-5': '#3ddcff',
-    'DQN-7': '#57abff',
-    'DQN-9': '#8b8cff',
-    'DQN-11': '#b260ff',
-    'DQN-13': '#d72dff',
-    'DQN-15': '#ff00ff',
-    'Random': '#000000',
+    'DQN': 'blue',
+    'Random': 'black',
 }
 
 METRIC = "reward"
-# keep 1 in every SUBSAMPLE measurements
-POINTS = 1
+POINTS = 500
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -81,7 +74,7 @@ if __name__ == "__main__":
     reports = []
 
     f, ax = plt.subplots()
-    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: int(x[0].split('-')[1])):
+    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: x[0]):
         if len(sub_df) == 0: continue
 
         report = Hypers.select_best_hypers(
@@ -146,5 +139,3 @@ if __name__ == "__main__":
     else:
         plt.show()
         exit()
-
-    generate_hyper_sweep_table(algs, reports, __file__)

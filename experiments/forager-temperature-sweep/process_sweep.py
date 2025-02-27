@@ -2,26 +2,18 @@ import os
 import sys
 
 sys.path.append(os.getcwd() + '/src')
-import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 import RlEvaluation.hypers as Hypers
-import RlEvaluation.metrics as Metrics
-from PyExpPlotting.matplot import save, setDefaultConference, setFonts
+from PyExpPlotting.matplot import setDefaultConference, setFonts
 from PyExpUtils.results.Collection import ResultCollection
 from RlEvaluation.config import data_definition
-from RlEvaluation.interpolation import compute_step_return
 from RlEvaluation.statistics import Statistic
-from RlEvaluation.temporal import (
-    TimeSummary,
-    curve_percentile_bootstrap_ci,
-    extract_learning_curves,
-)
+from RlEvaluation.temporal import TimeSummary
 from RlEvaluation.utils.pandas import split_over_column
 
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
-from experiment.hypers import update_best_config, generate_hyper_sweep_table
+from experiment.hypers import generate_hyper_sweep_table, update_best_config
 from experiment.tools import parseCmdLineArgs
 
 # makes sure figures are right size for the paper/column widths
@@ -29,20 +21,7 @@ from experiment.tools import parseCmdLineArgs
 setDefaultConference('jmlr')
 setFonts(20)
 
-COLORS = {
-    'DQN-3': '#00ffff',
-    'DQN-5': '#3ddcff',
-    'DQN-7': '#57abff',
-    'DQN-9': '#8b8cff',
-    'DQN-11': '#b260ff',
-    'DQN-13': '#d72dff',
-    'DQN-15': '#ff00ff',
-    'Random': '#000000',
-}
-
 METRIC = "reward"
-# keep 1 in every SUBSAMPLE measurements
-POINTS = 1
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -81,7 +60,7 @@ if __name__ == "__main__":
     reports = []
 
     f, ax = plt.subplots()
-    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: int(x[0].split('-')[1])):
+    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: x[0]):
         if len(sub_df) == 0: continue
 
         report = Hypers.select_best_hypers(

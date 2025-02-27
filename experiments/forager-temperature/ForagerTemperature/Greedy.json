@@ -1,5 +1,5 @@
 {
-    "agent": "Greedy",
+    "agent": "Greedy-122",
     "problem": "ForagerTwoBiomeLarge",
     "total_steps": 500000,
     "episode_cutoff": -1,
@@ -9,14 +9,12 @@
         },
         "env_info": {
             "object_channel": {
-                "morel": 1,
-                "oyster": 2,
-                "deathcap": 0
+                "hot": 0,
+                "cold": 1
             },
             "object_priority": {
-                "morel": 2,
-                "oyster": 3,
-                "deathcap": 1
+                "hot": 2,
+                "cold": 2
             }
         },
         "experiment": {
