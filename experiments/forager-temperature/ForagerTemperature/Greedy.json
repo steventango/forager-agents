@@ -1,6 +1,6 @@
 {
-    "agent": "Greedy-122",
-    "problem": "ForagerTwoBiomeLarge",
+    "agent": "Greedy",
+    "problem": "ForagerTemperature",
     "total_steps": 500000,
     "episode_cutoff": -1,
     "metaParameters": {

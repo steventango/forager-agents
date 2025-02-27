@@ -29,16 +29,9 @@ setDefaultConference('jmlr')
 setFonts(20)
 
 COLORS = {
-    'DQN-3': '#00ffff',
-    'DQN-5': '#3ddcff',
-    'DQN-7': '#57abff',
-    'DQN-9': '#8b8cff',
-    'DQN-11': '#b260ff',
-    'DQN-13': '#d72dff',
-    'DQN-15': '#ff00ff',
-    'Random': '#000000',
-    'Greedy': '#00ff00',
-    'Greedy-122': '#ff0000',
+    'DQN': 'blue',
+    'Random': 'black',
+    'Greedy': 'green',
 }
 
 METRIC = "reward"
@@ -79,54 +72,53 @@ if __name__ == "__main__":
     exp = results.get_any_exp()
 
     f, ax = plt.subplots()
-    for env, env_df in sorted(split_over_column(df, col='environment.aperture'), key=lambda x: x[0]):
-        for alg, sub_df in sorted(split_over_column(env_df, col='algorithm'), key=lambda x: x[0]):
-            if len(sub_df) == 0: continue
+    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: x[0]):
+        if len(sub_df) == 0: continue
 
-            report = Hypers.select_best_hypers(
-                sub_df,
-                metric=METRIC,
-                prefer=Hypers.Preference.high,
-                time_summary=TimeSummary.sum,
-                statistic=Statistic.mean,
-            )
+        report = Hypers.select_best_hypers(
+            sub_df,
+            metric=METRIC,
+            prefer=Hypers.Preference.high,
+            time_summary=TimeSummary.sum,
+            statistic=Statistic.mean,
+        )
 
-            print('-' * 25)
-            print(env, alg)
-            Hypers.pretty_print(report)
+        print('-' * 25)
+        print(alg)
+        Hypers.pretty_print(report)
 
-            xs, ys = extract_learning_curves(
-                sub_df,
-                report.best_configuration,
-                metric=METRIC,
-                interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
-            )
+        xs, ys = extract_learning_curves(
+            sub_df,
+            report.best_configuration,
+            metric=METRIC,
+            interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
+        )
 
-            subsample = len(xs[0]) // POINTS
-            xs = np.asarray(xs)[:, ::subsample]
-            ys = np.asarray(ys)[:, ::subsample]
-            print(xs.shape, ys.shape)
+        subsample = len(xs[0]) // POINTS
+        xs = np.asarray(xs)[:, ::subsample]
+        ys = np.asarray(ys)[:, ::subsample]
+        print(xs.shape, ys.shape)
 
-            # make sure all of the x values are the same for each curve
-            assert np.all(np.isclose(xs[0], xs))
+        # make sure all of the x values are the same for each curve
+        assert np.all(np.isclose(xs[0], xs))
 
-            res = curve_percentile_bootstrap_ci(
-                rng=np.random.default_rng(0),
-                y=ys,
-                statistic=Statistic.mean,
-            )
+        res = curve_percentile_bootstrap_ci(
+            rng=np.random.default_rng(0),
+            y=ys,
+            statistic=Statistic.mean,
+        )
 
-            ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
-            if len(ys) <= 5:
-                for x, y in zip(xs, ys):
-                    ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
-            else:
-                ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-            ax.set_xlabel('Steps')
-            ax.set_ylabel('Average Reward')
-            ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
+        ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
+        if len(ys) <= 5:
+            for x, y in zip(xs, ys):
+                ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
+        else:
+            ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
+        ax.set_xlabel('Steps')
+        ax.set_ylabel('Average Reward')
+        ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ax.legend()
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
