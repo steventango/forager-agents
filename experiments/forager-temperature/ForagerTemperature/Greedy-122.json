@@ -1,0 +1,26 @@
+{
+    "agent": "Greedy-122",
+    "problem": "ForagerTwoBiomeLarge",
+    "total_steps": 500000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "environment": {
+            "aperture": 15
+        },
+        "env_info": {
+            "object_channel": {
+                "deathcap": 0,
+                "morel": 1,
+                "oyster": 2
+            },
+            "object_priority": {
+                "deathcap": 1,
+                "morel": 2,
+                "oyster": 2
+            }
+        },
+        "experiment": {
+            "seed_offset": 0
+        }
+    }
+}
