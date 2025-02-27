@@ -29,9 +29,9 @@ setDefaultConference('jmlr')
 setFonts(20)
 
 COLORS = {
-    'DQN': 'blue',
+    'DQN': "#4285f4",
     'SAC': 'red',
-    'Greedy': 'green',
+    'Greedy': "#34a853",
     'Random': '#000000',
 }
 
@@ -72,64 +72,63 @@ if __name__ == "__main__":
 
     results = iter(results)
 
-    for env, env_df in split_over_column(df, col='environment'):
-        f, ax = plt.subplots()
-        for alg, sub_df in split_over_column(env_df, col='algorithm'):
-            if len(sub_df) == 0: continue
+    f, ax = plt.subplots()
+    for alg, sub_df in split_over_column(df, col='algorithm'):
+        if len(sub_df) == 0: continue
 
-            report = Hypers.select_best_hypers(
-                sub_df,
-                metric=METRIC,
-                prefer=Hypers.Preference.high,
-                time_summary=TimeSummary.sum,
-                statistic=Statistic.mean,
-            )
+        report = Hypers.select_best_hypers(
+            sub_df,
+            metric=METRIC,
+            prefer=Hypers.Preference.high,
+            time_summary=TimeSummary.sum,
+            statistic=Statistic.mean,
+        )
 
-            print('-' * 25)
-            print(env, alg)
-            Hypers.pretty_print(report)
+        print('-' * 25)
+        print(alg)
+        Hypers.pretty_print(report)
 
-            result = next(results)
-            exp = result.exp
+        result = next(results)
+        exp = result.exp
 
-            xs, ys = extract_multiple_learning_curves(
-                sub_df,
-                report.uncertainty_set_configurations,
-                metric=METRIC,
-                interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
-            )
+        xs, ys = extract_multiple_learning_curves(
+            sub_df,
+            report.uncertainty_set_configurations,
+            metric=METRIC,
+            interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
+        )
 
-            subsample = len(xs[0]) // POINTS
-            xs = np.asarray(xs)[:, ::subsample]
-            ys = np.asarray(ys)[:, ::subsample]
+        subsample = len(xs[0]) // POINTS
+        xs = np.asarray(xs)[:, ::subsample]
+        ys = np.asarray(ys)[:, ::subsample]
 
-            # make sure all of the x values are the same for each curve
-            assert np.all(np.isclose(xs[0], xs))
+        # make sure all of the x values are the same for each curve
+        assert np.all(np.isclose(xs[0], xs))
 
-            res = curve_percentile_bootstrap_ci(
-                rng=np.random.default_rng(0),
-                y=ys,
-                statistic=Statistic.mean,
-            )
+        res = curve_percentile_bootstrap_ci(
+            rng=np.random.default_rng(0),
+            y=ys,
+            statistic=Statistic.mean,
+        )
 
-            ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
-            ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-            ax.set_xlabel('Steps')
-            ax.set_ylabel('Average Reward')
-            ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
+        ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
+        ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
+        ax.set_xlabel('Steps')
+        ax.set_ylabel('Average Reward')
+        ax.set_xticks([0, 10_000_000])
+        ax.set_xticklabels(['0', '10M'])
 
-        # despine
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+    # despine
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
-        ax.legend()
-        if should_save:
-            save(
-                save_path=f'{path}/plots',
-                plot_name=f'learning_curve_{env}',
-                save_type=save_type,
-            )
-            plt.clf()
-        else:
-            plt.show()
-            exit()
+    if should_save:
+        save(
+            save_path=f'{path}/plots',
+            plot_name=f'learning_curve',
+            save_type=save_type,
+        )
+        plt.clf()
+    else:
+        plt.show()
+        exit()
