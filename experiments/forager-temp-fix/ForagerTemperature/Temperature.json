@@ -1,0 +1,16 @@
+{
+    "agent": "Random-temperature",
+    "problem": "ForagerTemperature",
+    "total_steps": 1000000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "environment": {
+            "file": 0,
+            "aperture": 1,
+            "dummy": true
+        },
+        "experiment": {
+            "seed_offset": 0
+        }
+    }
+}
