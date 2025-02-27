@@ -25,6 +25,10 @@ def load_data(file_path: str):
     return df["normalized_mean_temperature"].to_numpy()
 
 
+def get_temperature(rewards: np.ndarray, clock: int, repeat: int) -> float:
+    return rewards[clock // repeat % len(rewards)]
+
+
 def hot_factory(rewards: np.ndarray, repeat: int) -> ObjectFactory:
     class Hot(ForagerObject):
         def __init__(self, loc: Coords | None = None):
@@ -42,7 +46,7 @@ def hot_factory(rewards: np.ndarray, repeat: int) -> ObjectFactory:
             return int(max(0, rng.normal(10, 1)))
 
         def reward(self, rng: np.random.Generator, clock: int) -> float:
-            return self.rewards[clock // self.repeat % len(self.rewards)]
+            return get_temperature(self.rewards, clock, self.repeat)
 
     return Hot
 
@@ -64,13 +68,13 @@ def cold_factory(rewards: np.ndarray, repeat: int) -> ObjectFactory:
             return int(max(0, rng.normal(10, 1)))
 
         def reward(self, rng: np.random.Generator, clock: int) -> float:
-            return self.rewards[clock // self.repeat % len(self.rewards)]
+            return get_temperature(self.rewards, clock, self.repeat)
 
     return Cold
 
 
 class ForagerTemperature(BaseEnvironment):
-    def __init__(self, seed: int, aperture: int):
+    def __init__(self, seed: int, aperture: int, privileged: bool = False):
         assert 0 <= seed < len(FILE_PATHS)
         self.rewards = load_data(FILE_PATHS[seed])
         self.repeat = 100
@@ -83,6 +87,7 @@ class ForagerTemperature(BaseEnvironment):
             aperture=aperture,
             seed=seed,
         )
+        self.privileged = privileged
         self.env = ForagerEnv(config)
         # 012345678901234
         # ___AA_____BB___
@@ -95,12 +100,17 @@ class ForagerTemperature(BaseEnvironment):
 
     def step(self, a: int):
         obs, r = self.env.step(a)
-        return (r, obs.astype(np.float32), False, {})
+        obs = obs.astype(np.float32)
+        if self.privileged:
+            temperature = get_temperature(self.rewards, self.env._clock, self.repeat)
+            obs *= temperature
+        return (r, obs, False, {})
+
 
     def render(self):
         rgb_array = self.env.render(mode="world")
         black_line = np.zeros((1, *rgb_array.shape[1:]), dtype=np.uint8)
-        temperature = self.rewards[self.env._clock // self.repeat % len(self.rewards)]
+        temperature = get_temperature(self.rewards, self.env._clock, self.repeat)
         temperature_line = np.clip((temperature + 1) / 2, 0, 1) * np.array([255, 0, 255]) + (1 - np.clip((temperature + 1) / 2, 0, 1)) * np.array([0, 255, 255])
         temperature_line = np.tile(temperature_line, (1, rgb_array.shape[1], 1)).astype(np.uint8)
         rgb_array = np.vstack((rgb_array, black_line, temperature_line))
