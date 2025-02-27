@@ -30,6 +30,7 @@ setFonts(20)
 
 COLORS = {
     'DQN': 'blue',
+    'DQN-11': 'olive',
     'Random': 'black',
     'Temperature': 'orange',
     'Greedy': 'green',
