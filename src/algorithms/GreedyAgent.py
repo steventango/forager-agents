@@ -202,10 +202,21 @@ class GreedyAgent(BaseAgent):
                 self.starting_pos = (agent_pos[0][0], agent_pos[1][0])
         
         # Process each object type according to its channel and priority.
-        for obj, prio in self.object_priority.items():
+        # if there are negative values in x, the order of the objects is
+        # reversed, so we need to reverse the order of the object_priority
+        _reversed = np.any(x < 0)
+        object_priority = {k: v for k, v in self.object_priority.items()}
+        if _reversed:
+            assert len(self.object_priority) == 2, "Only two objects are supported in reversed mode."
+            # swap the priority values
+            keys = list(object_priority.keys())
+            cached_value = object_priority[keys[0]]
+            object_priority[keys[0]] = object_priority[keys[1]]
+            object_priority[keys[1]] = cached_value
+        for obj, prio in object_priority.items():
             if obj in self.object_channel:
                 channel = self.object_channel[obj]
-                mask = x[:, :, channel] > 0
+                mask = x[:, :, channel] > 0 if not _reversed else x[:, :, channel] < 0
                 # If a cell already has a value, choose the minimum (i.e. highest priority) in case of conflict.
                 state[mask] = np.where(state[mask] == 0, prio, np.minimum(state[mask], prio))
         return state
