@@ -74,10 +74,14 @@ def cold_factory(rewards: np.ndarray, repeat: int) -> ObjectFactory:
 
 
 class ForagerTemperature(BaseEnvironment):
-    def __init__(self, seed: int, aperture: int, privileged: bool = False):
-        assert 0 <= seed < len(FILE_PATHS)
-        self.rewards = load_data(FILE_PATHS[seed])
-        self.repeat = 100
+    def __init__(self, seed: int, aperture: int, privileged: bool = False,
+                 dummy: bool = False, repeat: int = 100, file: None | int = None):
+        if file is None:
+            assert 0 <= seed < len(FILE_PATHS)
+            self.rewards = load_data(FILE_PATHS[seed])
+        else:
+            self.rewards = load_data(FILE_PATHS[file])
+        self.repeat = repeat
         config = ForagerConfig(
             size=(15, 15),
             object_types={
@@ -88,6 +92,7 @@ class ForagerTemperature(BaseEnvironment):
             seed=seed,
         )
         self.privileged = privileged
+        self.dummy = dummy
         self.env = ForagerEnv(config)
         # 012345678901234
         # ___AA_____BB___
@@ -104,6 +109,8 @@ class ForagerTemperature(BaseEnvironment):
         if self.privileged:
             temperature = get_temperature(self.rewards, self.env._clock, self.repeat)
             obs *= temperature
+        if self.dummy:
+            r = get_temperature(self.rewards, self.env._clock, self.repeat)
         return (r, obs, False, {})
 
 

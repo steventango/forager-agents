@@ -116,7 +116,7 @@ for idx in indices:
 
     recorded_frames = []
     video_frequency = int(0.1 * exp.total_steps)
-    video_length = 10000
+    video_length = 0
 
     with open(path + '/hypers.json', 'w') as f:
         hypers["run"] = run
@@ -147,7 +147,7 @@ for idx in indices:
             image = image.resize((rgb_array.shape[1] * 10, rgb_array.shape[0] * 10), Image.NEAREST)
             frame = np.array(image)
             recorded_frames.append(frame)
-        elif step % video_frequency == video_length:
+        elif step % video_frequency == video_length and len(recorded_frames) > 0:
             clip = ImageSequenceClip(recorded_frames, fps=8)
             clip.write_videofile(path + f"/{step - video_length}-{step - 1}.mp4")
             recorded_frames = []

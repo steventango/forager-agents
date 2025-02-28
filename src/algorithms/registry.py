@@ -17,7 +17,7 @@ def getAgent(name) -> Type[BaseAgent]:
     if name == 'EQRC':
         return EQRC
 
-    if name == 'Random':
+    if name.startswith('Random'):
         return RandomAgent
 
     if name.startswith('Greedy'):
