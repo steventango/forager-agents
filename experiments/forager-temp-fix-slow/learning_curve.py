@@ -31,7 +31,7 @@ setFonts(20)
 
 COLORS = {
     'DQN': 'blue',
-    'DQN-11': 'olive',
+    'DQN-11': 'magenta',
     'Random': 'black',
     'Temperature': 'orange',
     'Greedy': 'green',
@@ -41,12 +41,18 @@ COLORS = {
 
 # SKIP = ["Greedy"]
 SKIP = []
+SKIP_ERROR = ["Greedy"]
 # SKIP = COLORS.keys() - ["DQN-11"]
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-POINTS = 250
+POINTS = 100
 PLOT_THE_FIRST = 1.0
 post_fix = "" if PLOT_THE_FIRST == 1.0 else f"_{PLOT_THE_FIRST}"
+
+BASE = 'Greedy-privileged'
+BASE_COLOR = 'grey'
+BASE_LINESTYLE = '--'
+base_post_fix = "" if BASE is None else "_based"
 
 PLOT_REWARD = False
 reward_post_fix = "_reward" if PLOT_REWARD else ""
@@ -127,7 +133,7 @@ if __name__ == "__main__":
     exp = results.get_any_exp()
 
     f, ax = plt.subplots()
-    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: x[0]):
+    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: x[0] if x[0] != BASE else '0'):
         if len(sub_df) == 0: continue
         if alg in SKIP: continue
 
@@ -160,6 +166,11 @@ if __name__ == "__main__":
         ys = np.asarray(ys)[:, ::subsample]
         print(xs.shape, ys.shape)
 
+        if alg == BASE:
+            base_ys = ys
+        if BASE is not None and not PLOT_REWARD:
+            ys = ys / base_ys
+
         # make sure all of the x values are the same for each curve
         assert np.all(np.isclose(xs[0], xs))
 
@@ -175,11 +186,14 @@ if __name__ == "__main__":
             # get absolute reward
             sample_stat = np.abs(sample_stat)
             ys = np.abs(ys)
-        ax.plot(xs[0], sample_stat, label=label, color=COLORS[alg], linewidth=0.5)
+        if alg == BASE:
+            ax.plot(xs[0], sample_stat, label=alg, color=BASE_COLOR, linestyle=BASE_LINESTYLE, linewidth=0.5)
+        else:
+            ax.plot(xs[0], sample_stat, label=label, color=COLORS[alg], linewidth=0.5)
         if len(ys) <= 5 and False:
             for x, y in zip(xs, ys):
                 ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
-        elif not PLOT_REWARD:
+        elif not PLOT_REWARD and alg not in SKIP_ERROR:
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
         ax.set_xlabel('Steps')
         if PLOT_REWARD:
@@ -203,14 +217,14 @@ if __name__ == "__main__":
     if should_save:
         save(
             save_path=f'{path}/plots',
-            plot_name=f'learning_curve{reward_post_fix}{post_fix}',
+            plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
             save_type="png",
             width=1.2,
             height_ratio=1 / 1.2,
         )
         save(
             save_path=f'{path}/plots',
-            plot_name=f'learning_curve{reward_post_fix}{post_fix}',
+            plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
             save_type="pdf",
             width=1.2,
             height_ratio=1 / 1.2,
