@@ -3,21 +3,22 @@ import sys
 
 sys.path.append(os.getcwd() + '/src')
 
+from typing import Any, List, Sequence, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import RlEvaluation.hypers as Hypers
 import RlEvaluation.metrics as Metrics
 from PyExpPlotting.matplot import save, setDefaultConference, setFonts
 from PyExpUtils.results.Collection import ResultCollection
-from RlEvaluation.config import data_definition
-from RlEvaluation.interpolation import compute_step_return
+from RlEvaluation.config import data_definition, DataDefinition, maybe_global
+from RlEvaluation.interpolation import compute_step_return, Interpolation
 from RlEvaluation.statistics import Statistic
 from RlEvaluation.temporal import (
     TimeSummary,
     curve_percentile_bootstrap_ci,
-    extract_learning_curves,
 )
-from RlEvaluation.utils.pandas import split_over_column
+from RlEvaluation.utils.pandas import split_over_column, subset_df
 
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
@@ -38,10 +39,59 @@ COLORS = {
     'Greedy-privileged': 'purple',
 }
 
-SKIP = ["Greedy"]
+# SKIP = ["Greedy"]
+SKIP = []
+# SKIP = COLORS.keys() - ["DQN-11"]
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-POINTS = 500
+POINTS = 250
+PLOT_THE_FIRST = 1.0
+post_fix = "" if PLOT_THE_FIRST == 1.0 else f"_{PLOT_THE_FIRST}"
+
+PLOT_REWARD = False
+reward_post_fix = "_reward" if PLOT_REWARD else ""
+
+if PLOT_REWARD:
+    SKIP = COLORS.keys() - ["Temperature"]
+else:
+    SKIP.append("Temperature")
+
+def extract_learning_curves(
+    df: pd.DataFrame,
+    hyper_vals: Tuple[Any, ...],
+    metric: str,
+    data_definition: DataDefinition | None = None,
+    interpolation: Interpolation | None = None,
+):
+    dd = maybe_global(data_definition)
+    cols = set(dd.hyper_cols).intersection(df.columns)
+    sub = subset_df(df, list(cols), hyper_vals)
+
+    groups = sub.groupby(dd.seed_col)
+
+    xs: List[np.ndarray] = []
+    ys: List[np.ndarray] = []
+    for _, group in groups:
+        non_na = group[group[metric].notna()]
+        x = non_na[dd.time_col].to_numpy().astype(np.int64)
+        y = non_na[metric].to_numpy().astype(np.float64)
+
+        print('source:', x.shape, y.shape)
+        # if x is not strictly increasing, there are duplicates,
+        # we just take the second half for now
+        if not np.all(x[1:] > x[:-1]):
+            x = x[len(x) // 2:]
+            y = y[len(y) // 2:]
+            print('processed:', x.shape, y.shape)
+
+        if interpolation is not None:
+            x, y = interpolation(x, y)
+
+        xs.append(x)
+        ys.append(y)
+
+    return xs, ys
+
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -100,6 +150,11 @@ if __name__ == "__main__":
             interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
         )
 
+        if PLOT_THE_FIRST < 1.0:
+            n = int(len(xs[0]) * PLOT_THE_FIRST)
+            xs = [x[:n] for x in xs]
+            ys = [y[:n] for y in ys]
+
         subsample = len(xs[0]) // POINTS
         xs = np.asarray(xs)[:, ::subsample]
         ys = np.asarray(ys)[:, ::subsample]
@@ -121,16 +176,26 @@ if __name__ == "__main__":
             sample_stat = np.abs(sample_stat)
             ys = np.abs(ys)
         ax.plot(xs[0], sample_stat, label=label, color=COLORS[alg], linewidth=0.5)
-        if len(ys) <= 5:
+        if len(ys) <= 5 and False:
             for x, y in zip(xs, ys):
                 ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
-        else:
+        elif not PLOT_REWARD:
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
         ax.set_xlabel('Steps')
-        ax.set_ylabel('Average Reward')
+        if PLOT_REWARD:
+            ax.set_ylabel('Reward')
+        else:
+            ax.set_ylabel('Average Reward')
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
-    ax.legend()
+    # put legend outside of plot
+    # box = ax.get_position()
+    # ax.set_position([box.x0, box.y0, box.width * 0.8, box
+    #                  .height])
+    if "Reward" not in ax.get_legend_handles_labels()[1]:
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    else:
+        ax.legend()
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -138,11 +203,18 @@ if __name__ == "__main__":
     if should_save:
         save(
             save_path=f'{path}/plots',
-            plot_name=f'learning_curve',
-            save_type=save_type,
+            plot_name=f'learning_curve{reward_post_fix}{post_fix}',
+            save_type="png",
             width=1.2,
             height_ratio=1 / 1.2,
         )
+        save(
+            save_path=f'{path}/plots',
+            plot_name=f'learning_curve{reward_post_fix}{post_fix}',
+            save_type="pdf",
+            width=1.2,
+            height_ratio=1 / 1.2,
+        )        
         plt.clf()
     else:
         plt.show()
