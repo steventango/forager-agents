@@ -1,4 +1,3 @@
-bash scripts/forager-extra-large-sweep.sh
-bash scripts/forager-extra-large.sh
-bash scripts/jellybean-world-extra-large-sweep.sh
-bash scripts/jellybean-world-extra-large.sh
+bash scripts/forager-temp-fix-slow.sh
+bash scripts/forager-temp-fix.sh
+wait
