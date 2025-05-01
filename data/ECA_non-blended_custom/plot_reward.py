@@ -1,5 +1,6 @@
 # %%
 import pandas as pd
+from PyExpPlotting.matplot import save, setDefaultConference, setFonts
 
 # EUROPEAN CLIMATE ASSESSMENT & DATASET (ECA&D), file created on 27-02-2025
 # THESE DATA CAN BE USED FREELY PROVIDED THAT THE FOLLOWING SOURCE IS ACKNOWLEDGED:
@@ -41,29 +42,34 @@ df["normalized_mean_temperature"] = (df["mean_temperature"] - df["mean_temperatu
 df["date"] = pd.to_datetime(df["DATE"], format='%Y%m%d')
 df["reward_hot"] = df["normalized_mean_temperature"]
 df["reward_cold"] = -df["normalized_mean_temperature"]
-print(len(df))
 # %%
-import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
-# plot 10 year windows:
-n_windows = (df["date"].dt.year.max() - df["date"].dt.year.min()) // 10
-print(n_windows)
-fig, axs = plt.subplots(n_windows, 1, figsize=(10, 10 * n_windows))
-for ax, start_year in zip(axs, range(df["date"].dt.year.min(), df["date"].dt.year.max(), 10)):
-    end_year = start_year + 10
-    start_date = pd.Timestamp(f'{start_year}-01-01')
-    end_date = pd.Timestamp(f'{end_year}-01-01')
-    sub_df = df[(df["date"] >= start_date) & (df["date"] < end_date)]
-    sub_df = sub_df.reset_index()
-    print(len(sub_df))
-    sns.lineplot(data=sub_df, x='index', y='normalized_mean_temperature', ax=ax)
-    ax.set_title(f'Normalized Mean Temperature from {start_year} to {end_year}')
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Normalized Mean Temperature')
-plt.tight_layout()
-plt.show()
 
-# sns.lineplot(data=df, x='date', y='normalized_mean_temperature')
+def get_temperature(rewards: np.ndarray, clock: int, repeat: int) -> float:
+    return rewards[clock // repeat % len(rewards)]
 
+def reward_gen(rewards: np.ndarray, duration: int, repeat: int) -> np.ndarray:
+    return np.array([get_temperature(rewards, clock, repeat) for clock in range(duration)])
+
+def plot_reward(rewards: np.ndarray, duration: int, repeat: int, title: str):
+    timeseries = reward_gen(rewards, duration, repeat)
+    points = 500
+    x = np.linspace(0, duration, points)
+    timeseries = timeseries[::(len(timeseries) // points)]
+    setFonts(20)
+    plt.figure(figsize=(6, 6))
+    plt.plot(x, timeseries, label='reward', color='black')
+    plt.xlabel('Time steps')
+    plt.ylabel('Reward')
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.gca().ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
+    plt.tight_layout()
+    plt.savefig(title)
+    plt.clf()
+
+plot_reward(df["normalized_mean_temperature"].to_numpy(), int(1e6), 500, 'reward_timeseries_slow.pdf')
+plot_reward(df["normalized_mean_temperature"].to_numpy(), int(1e6), 100, 'reward_timeseries_fast.pdf')
 # %%
