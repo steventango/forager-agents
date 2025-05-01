@@ -116,7 +116,7 @@ for idx in indices:
 
     recorded_frames = []
     video_frequency = int(0.1 * exp.total_steps)
-    video_length = 1000
+    video_length = 100_000
 
     with open(path + '/hypers.json', 'w') as f:
         hypers["run"] = run
@@ -141,10 +141,10 @@ for idx in indices:
             avg_reward = collector.get_last('reward')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
 
-        if step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
+        if step > 899999 and step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
             rgb_array = env.render()
             image = Image.fromarray(rgb_array)
-            image = image.resize((rgb_array.shape[1] * 10, rgb_array.shape[0] * 10), Image.NEAREST)
+            image = image.resize((rgb_array.shape[1] // 2, rgb_array.shape[0] // 2), Image.NEAREST)
             frame = np.array(image)
             recorded_frames.append(frame)
         elif step % video_frequency == video_length and len(recorded_frames) > 0:
