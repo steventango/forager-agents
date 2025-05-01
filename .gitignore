@@ -23,3 +23,5 @@ test.json
 build
 build/
 **.egg-info/
+
+*.zip
