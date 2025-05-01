@@ -54,7 +54,7 @@ class NNAgent(BaseAgent):
         # ---------------------
         builder = NetworkBuilder(observations, self.rep_params, seed)
         self._build_heads(builder)
-        if len(observations) > 3:
+        if self.__class__.__name__ == "DRQN":
             self.phi = builder.getRecurrentFeatureFunction()
         else:
             self.phi = builder.getFeatureFunction()

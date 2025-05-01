@@ -214,7 +214,6 @@ class DRQN(NNAgent):
         self.carry = None
         self.buffer.flush()
         x = np.asarray(x)
-        x = self.normalize_state(x)
         carry = self.values(x)[2]
         pi = self.policy(x)
         a = sample(pi, rng=self.rng)
@@ -240,7 +239,6 @@ class DRQN(NNAgent):
         # sample next action
         if xp is not None:
             xp = np.asarray(xp)
-            xp = self.normalize_state(xp)
             pi = self.policy(xp)
             a = sample(pi, rng=self.rng)
 
