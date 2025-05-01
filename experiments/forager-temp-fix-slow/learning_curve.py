@@ -34,7 +34,7 @@ COLORS = {
     'DQN-11': 'magenta',
     'Random': 'black',
     'Temperature': 'orange',
-    'Greedy': 'green',
+    'Greedy-hot': 'green',
     'DQN-privileged': 'red',
     'Greedy-privileged': 'purple',
 }
@@ -218,17 +218,17 @@ if __name__ == "__main__":
         save(
             save_path=f'{path}/plots',
             plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
-            save_type="png",
+            save_type=save_type,
             width=1.2,
             height_ratio=1 / 1.2,
         )
         save(
             save_path=f'{path}/plots',
             plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
-            save_type="pdf",
+            save_type=save_type,
             width=1.2,
             height_ratio=1 / 1.2,
-        )        
+        )
         plt.clf()
     else:
         plt.show()

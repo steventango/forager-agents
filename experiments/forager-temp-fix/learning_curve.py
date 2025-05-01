@@ -35,11 +35,12 @@ COLORS = {
     'Random': 'black',
     'Temperature': 'orange',
     'Greedy': 'green',
+    'Greedy-hot': 'cyan',
     'DQN-privileged': 'red',
     'Greedy-privileged': 'purple',
 }
 
-SKIP = ["Greedy"]
+SKIP = ["Greedy", "Greedy-hot"]
 # SKIP = COLORS.keys() - ["DQN-11"]
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
@@ -216,17 +217,17 @@ if __name__ == "__main__":
         save(
             save_path=f'{path}/plots',
             plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
-            save_type="png",
+            save_type=save_type,
             width=1.2,
             height_ratio=1 / 1.2,
         )
         save(
             save_path=f'{path}/plots',
             plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
-            save_type="pdf",
+            save_type=save_type,
             width=1.2,
             height_ratio=1 / 1.2,
-        )        
+        )
         plt.clf()
     else:
         plt.show()
