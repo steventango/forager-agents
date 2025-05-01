@@ -119,6 +119,6 @@ class ForagerTemperature(BaseEnvironment):
         black_line = np.zeros((1, *rgb_array.shape[1:]), dtype=np.uint8)
         temperature = get_temperature(self.rewards, self.env._clock, self.repeat)
         temperature_line = np.clip((temperature + 1) / 2, 0, 1) * np.array([255, 0, 255]) + (1 - np.clip((temperature + 1) / 2, 0, 1)) * np.array([0, 255, 255])
-        temperature_line = np.tile(temperature_line, (1, rgb_array.shape[1], 1)).astype(np.uint8)
+        temperature_line = np.tile(temperature_line, (36, rgb_array.shape[1], 1)).astype(np.uint8)
         rgb_array = np.vstack((rgb_array, black_line, temperature_line))
         return rgb_array
