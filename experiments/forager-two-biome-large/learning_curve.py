@@ -22,6 +22,7 @@ from RlEvaluation.utils.pandas import split_over_column
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
 from experiment.tools import parseCmdLineArgs
+from utils.plotting import GDMColor
 
 # makes sure figures are right size for the paper/column widths
 # also sets fonts to be right size when saving
@@ -29,16 +30,29 @@ setDefaultConference('jmlr')
 setFonts(20)
 
 COLORS = {
-    'DQN-3': '#00ffff',
-    'DQN-5': '#3ddcff',
-    'DQN-7': '#57abff',
-    'DQN-9': '#8b8cff',
-    'DQN-11': '#b260ff',
-    'DQN-13': '#d72dff',
-    'DQN-15': '#ff00ff',
-    'Random': '#000000',
-    'Greedy': '#00ff00',
-    'Greedy-122': '#ff0000',
+    "DQN-3": "#00ffff",
+    "DQN-5": "#3ddcff",
+    "DQN-7": "#57abff",
+    "DQN-9": "#8b8cff",
+    "DQN-11": "#b260ff",
+    "DQN-13": "#d72dff",
+    "DQN-15": "#ff00ff",
+    "Random": GDMColor.BLACK,
+    "Greedy": GDMColor.GREEN,
+    "Greedy-122": GDMColor.RED,
+}
+
+ALG_MAP = {
+    "Greedy": "Search Oracle",
+    "Greedy-122": "Search Nearest",
+}
+
+SKIP = []
+
+ORDER = {
+    "Greedy": 100,
+    "Greedy-122": 101,
+    "Random": 102,
 }
 
 METRIC = "reward"
@@ -79,8 +93,10 @@ if __name__ == "__main__":
     exp = results.get_any_exp()
 
     f, ax = plt.subplots()
-    for env, env_df in sorted(split_over_column(df, col='environment.aperture'), key=lambda x: x[0]):
-        for alg, sub_df in sorted(split_over_column(env_df, col='algorithm'), key=lambda x: x[0]):
+    for alg, alg_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: int(x[0].split('-')[1]) if '-' in x[0] else ORDER[x[0]]):
+        if alg in SKIP:
+            continue
+        for env, sub_df in sorted(split_over_column(alg_df, col='environment.aperture'), key=lambda x: int(x[0])):
             if len(sub_df) == 0: continue
 
             report = Hypers.select_best_hypers(
@@ -116,17 +132,19 @@ if __name__ == "__main__":
                 statistic=Statistic.mean,
             )
 
-            ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
+            label = ALG_MAP.get(alg, alg)
+
+            ax.plot(xs[0], res.sample_stat, label=label, color=COLORS[alg], linewidth=0.5)
             if len(ys) <= 5:
                 for x, y in zip(xs, ys):
                     ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
             else:
                 ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-            ax.set_xlabel('Steps')
+            ax.set_xlabel("Time steps")
             ax.set_ylabel('Average Reward')
             ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ax.legend(ncol=1, loc="center left", bbox_to_anchor=(1, 0.5), frameon=False)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)

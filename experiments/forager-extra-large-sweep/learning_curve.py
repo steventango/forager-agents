@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
             ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-            ax.set_xlabel('Steps')
+            ax.set_xlabel("Time steps")
             ax.set_ylabel('Average Reward')
             ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 

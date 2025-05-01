@@ -20,6 +20,7 @@ from RlEvaluation.temporal import (
 from RlEvaluation.utils.pandas import split_over_column
 
 # from analysis.confidence_intervals import bootstrapCI
+from utils.plotting import GDMColor
 from experiment.ExperimentModel import ExperimentModel
 from experiment.tools import parseCmdLineArgs
 
@@ -30,7 +31,11 @@ setFonts(20)
 
 METRIC = "reward"
 LAST_PERCENT = 0.1
-gdm_colors = ["#4285f4", "#ff902a", "#34a853", "#ea4335", "#fbbc04", "#2daeb8"]
+ORDER = {
+    "Random": 0,
+    "Greedy": 2,
+    "Greedy-122":1,
+}
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -125,21 +130,28 @@ if __name__ == "__main__":
 
 
 
-    ax.plot(apertures, auc, label='DQN', color=gdm_colors[0], linewidth=1)
-    ax.fill_between(apertures, auc_ci_low, auc_ci_high, color=gdm_colors[0], alpha=0.2)
+    ax.plot(apertures, auc, label='DQN', color=GDMColor.BLUE, linewidth=1)
+    ax.fill_between(apertures, auc_ci_low, auc_ci_high, color=GDMColor.BLUE, alpha=0.2)
 
-    for (alg, report), color in zip(sorted(special.items(), key=lambda x: x[0]), gdm_colors[1:]):
+    for (alg, report), color in zip(sorted(special.items(), key=lambda x: ORDER[x[0]]), [ GDMColor.BLACK, GDMColor.RED, GDMColor.GREEN,]):
         if alg == "Greedy":
             alg = "Search Oracle"
+        if alg == "Greedy-122":
+            alg = "Search Nearest"
         ax.plot(apertures, [report.sample_stat] * len(apertures), label=alg, color=color, linewidth=1)
         ax.fill_between(apertures, report.ci[0], report.ci[1], color=color, alpha=0.4)
 
     ax.set_xlabel('Field of View')
-    ax.set_ylabel('Average Reward AUC Last 10%')
+    ax.set_ylabel('Last 10% Average Reward AUC')
     ax.set_xticks(apertures)
     ax.set_xticklabels([str(int(x)) for x in apertures])
 
-    ax.legend()
+    # ax.legend(ncol=2, frameon=False)
+    ax.text(3, 1.3, "Search Oracle", color=GDMColor.GREEN)
+    # right side
+    ax.text(15, 1.2, "DQN", color=GDMColor.BLUE, ha='right')
+    ax.text(15, 0.95, "Search Nearest", color=GDMColor.RED, ha='right')
+    ax.text(15, 0.4, "Random", color=GDMColor.BLACK, ha='right')
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)

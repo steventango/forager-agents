@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.getcwd() + '/src')
 
 from typing import Any, List, Sequence, Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -11,13 +12,10 @@ import RlEvaluation.hypers as Hypers
 import RlEvaluation.metrics as Metrics
 from PyExpPlotting.matplot import save, setDefaultConference, setFonts
 from PyExpUtils.results.Collection import ResultCollection
-from RlEvaluation.config import data_definition, DataDefinition, maybe_global
-from RlEvaluation.interpolation import compute_step_return, Interpolation
+from RlEvaluation.config import DataDefinition, data_definition, maybe_global
+from RlEvaluation.interpolation import Interpolation, compute_step_return
 from RlEvaluation.statistics import Statistic
-from RlEvaluation.temporal import (
-    TimeSummary,
-    curve_percentile_bootstrap_ci,
-)
+from RlEvaluation.temporal import TimeSummary, curve_percentile_bootstrap_ci
 from RlEvaluation.utils.pandas import split_over_column, subset_df
 
 # from analysis.confidence_intervals import bootstrapCI
@@ -194,11 +192,14 @@ if __name__ == "__main__":
                 ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
         elif not PLOT_REWARD:
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-        ax.set_xlabel('Steps')
+        ax.set_xlabel("Time steps")
         if PLOT_REWARD:
             ax.set_ylabel('Reward')
         else:
-            ax.set_ylabel('Average Reward')
+            if BASE is not None:
+                ax.set_ylabel("Relative Average Reward")
+            else:
+                ax.set_ylabel("Average Reward")
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
     # put legend outside of plot
@@ -215,18 +216,14 @@ if __name__ == "__main__":
 
     if should_save:
         save(
-            save_path=f'{path}/plots',
-            plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
+            save_path=f"{path}/plots",
+            plot_name=f"learning_curve{reward_post_fix}{post_fix}{base_post_fix}",
             save_type=save_type,
-            width=1.2,
-            height_ratio=1 / 1.2,
         )
         save(
-            save_path=f'{path}/plots',
-            plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
+            save_path=f"{path}/plots",
+            plot_name=f"learning_curve{reward_post_fix}{post_fix}{base_post_fix}",
             save_type=save_type,
-            width=1.2,
-            height_ratio=1 / 1.2,
         )
         plt.clf()
     else:

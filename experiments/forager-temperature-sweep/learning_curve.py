@@ -1,10 +1,10 @@
 import os
 import sys
 
-sys.path.append(os.getcwd() + '/src')
-import pandas as pd
+sys.path.append(os.getcwd() + "/src")
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import RlEvaluation.hypers as Hypers
 import RlEvaluation.metrics as Metrics
 from PyExpPlotting.matplot import save, setDefaultConference, setFonts
@@ -21,7 +21,7 @@ from RlEvaluation.utils.pandas import split_over_column
 
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
-from experiment.hypers import update_best_config, generate_hyper_sweep_table
+from experiment.hypers import generate_hyper_sweep_table, update_best_config
 from experiment.tools import parseCmdLineArgs
 
 # makes sure figures are right size for the paper/column widths
@@ -120,7 +120,7 @@ if __name__ == "__main__":
                 ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
         else:
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-        ax.set_xlabel('Steps')
+        ax.set_xlabel("Time steps")
         ax.set_ylabel('Average Reward')
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 

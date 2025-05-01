@@ -31,7 +31,8 @@ setFonts(20)
 
 COLORS = {
     'DQN-3': 'blue',
-    'DQN-15': 'red',
+    'DQN-5': 'cyan',
+    'DQN-15': 'magenta',
     'DQN-17': 'red',
     'Random': '#000000',
 }
@@ -118,7 +119,7 @@ if __name__ == "__main__":
                 ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
         else:
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-        ax.set_xlabel('Steps')
+        ax.set_xlabel("Time steps")
         ax.set_ylabel('Average Reward')
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 

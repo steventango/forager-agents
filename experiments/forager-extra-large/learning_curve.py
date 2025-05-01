@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
         ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
         ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-        ax.set_xlabel('Steps')
+        ax.set_xlabel("Time steps")
         ax.set_ylabel('Average Reward')
         ax.set_xticks([0, 10_000_000])
         ax.set_xticklabels(['0', '10M'])
@@ -125,7 +125,10 @@ if __name__ == "__main__":
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    ax.legend(loc='center right', bbox_to_anchor=(1.0, 0.225))
+    # ax.legend(loc='center right', bbox_to_anchor=(1.0, 0.225))
+    ax.text(int(6.1e6), 0.1, 'DQN', ha='center', va='center', color=COLORS['DQN'])
+    ax.text(250000, 0.14, 'Greedy', ha='left', va='center', color=COLORS['Greedy'])
+    ax.text(int(10e6), 0.02, 'Random', ha='right', va='center', color=COLORS['Random'])
     if should_save:
         save(
             save_path=f'{path}/plots',

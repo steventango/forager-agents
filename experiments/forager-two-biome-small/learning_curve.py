@@ -22,6 +22,7 @@ from RlEvaluation.utils.pandas import split_over_column
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
 from experiment.tools import parseCmdLineArgs
+from utils.plotting import GDMColor
 
 # makes sure figures are right size for the paper/column widths
 # also sets fonts to be right size when saving
@@ -29,15 +30,29 @@ setDefaultConference('jmlr')
 setFonts(20)
 
 COLORS = {
-    'DQN-3': 'blue',
-    'DQN-15': 'red',
+    "DQN-3": "#00ffff",
+    "DQN-5": "#3ddcff",
+    "DQN-15": "#ff00ff",
     'DQN-17': 'red',
     'Random': '#000000',
+    "Random": GDMColor.BLACK,
+    "Greedy": GDMColor.GREEN,
+    "Greedy-122": GDMColor.RED,
 }
+
+ALG_MAP = {
+    "Greedy": "Search Oracle",
+    "Greedy-122": "Search Nearest",
+}
+
+SKIP = [
+    "DQN-3",
+    "DQN-17"
+]
 
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-POINTS = 1000
+POINTS = 500
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
@@ -73,8 +88,10 @@ if __name__ == "__main__":
     exp = results.get_any_exp()
 
     f, ax = plt.subplots()
-    for env, env_df in split_over_column(df, col='environment.aperture'):
-        for alg, sub_df in split_over_column(env_df, col='algorithm'):
+    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: x[0]):
+        # for env, env_df in split_over_column(df, col='environment.aperture'):
+            if alg in SKIP:
+                continue
             if len(sub_df) == 0: continue
 
             report = Hypers.select_best_hypers(
@@ -86,7 +103,6 @@ if __name__ == "__main__":
             )
 
             print('-' * 25)
-            print(env, alg)
             Hypers.pretty_print(report)
 
             xs, ys = extract_learning_curves(
@@ -110,17 +126,19 @@ if __name__ == "__main__":
                 statistic=Statistic.mean,
             )
 
-            ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS[alg], linewidth=0.5)
+            label = ALG_MAP.get(alg, alg)
+
+            ax.plot(xs[0], res.sample_stat, label=label, color=COLORS[alg], linewidth=0.5)
             if len(ys) <= 5:
                 for x, y in zip(xs, ys):
                     ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
             else:
                 ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-            ax.set_xlabel('Steps')
+            ax.set_xlabel("Time steps")
             ax.set_ylabel('Average Reward')
             ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
-    ax.legend(ncol=2)
+    # ax.legend(ncol=2, frameon=False)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -130,6 +148,7 @@ if __name__ == "__main__":
             save_path=f'{path}/plots',
             plot_name=f'learning_curve',
             save_type=save_type,
+            width=1
         )
         plt.clf()
     else:
