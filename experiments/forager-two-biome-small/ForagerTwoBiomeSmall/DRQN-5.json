@@ -1,0 +1,36 @@
+{
+    "agent": "DRQN-5",
+    "problem": "ForagerTwoBiomeSmall",
+    "total_steps": 500000,
+    "episode_cutoff": -1,
+    "metaParameters": {
+        "initial_epsilon": 1,
+        "final_epsilon": 0.05,
+        "epsilon_steps": 400000,
+        "target_refresh": 1,
+        "buffer_type": "rnn_uniform",
+        "buffer_size": 10000,
+        "batch": 32,
+        "gamma": 0.99,
+        "n_step": 1,
+        "update_freq": 1,
+        "sequence_length": 128,
+        "environment": {
+            "aperture": 5
+        },
+        "experiment": {
+            "seed_offset": 0
+        },
+        "optimizer": {
+            "name": "ADAM",
+            "alpha": 3e-05,
+            "beta1": 0.9,
+            "beta2": 0.999,
+            "eps": 1e-08
+        },
+        "representation": {
+            "type": "ForagerGRUNet",
+            "hidden": 64
+        }
+    }
+}

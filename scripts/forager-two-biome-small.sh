@@ -12,6 +12,7 @@ wait
 python scripts/local.py --runs 30 -e experiments/forager-two-biome-small/ForagerTwoBiomeSmall/Random.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-two-biome-small/ForagerTwoBiomeSmall/Greedy.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-two-biome-small/ForagerTwoBiomeSmall/Greedy-122.json --entry src/continuing_main.py --cpus 30
+python scripts/local.py --runs 5 -e experiments/forager-two-biome-small/ForagerTwoBiomeSmall/DRQN-5.json --entry src/continuing_main.py --cpus 30 --gpu
 python scripts/local.py --runs 30 -e experiments/forager-two-biome-small/ForagerTwoBiomeSmall/DQN-3.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-two-biome-small/ForagerTwoBiomeSmall/DQN-5.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-two-biome-small/ForagerTwoBiomeSmall/DQN-15.json --entry src/continuing_main.py --cpus 30

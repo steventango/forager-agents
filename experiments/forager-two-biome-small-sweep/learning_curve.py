@@ -34,6 +34,10 @@ COLORS = {
     'DQN-5': 'cyan',
     'DQN-15': 'magenta',
     'DQN-17': 'red',
+    "DRQN-3": "#00ffff",
+    "DRQN-5": "#3ddcff",
+    "DRQN-15": "#ff00ff",
+    'DRQN-17': 'red',
     'Random': '#000000',
 }
 
