@@ -149,12 +149,12 @@ for idx in indices:
             recorded_frames.append(frame)
         elif step % video_frequency == video_length and len(recorded_frames) > 0:
             clip = ImageSequenceClip(recorded_frames, fps=8)
-            clip.write_videofile(path + f"/{step - video_length}-{step - 1}.mp4")
+            clip.write_videofile(path + f"/{max(step - video_length, 0)}-{step - 1}.mp4")
             recorded_frames = []
 
     if len(recorded_frames) > 0:
         clip = ImageSequenceClip(recorded_frames, fps=8)
-        clip.write_videofile(path + f"/{exp.total_steps - video_length}-{exp.total_steps - 1}.mp4")
+        clip.write_videofile(path + f"/{max(exp.total_steps - video_length, 0)}-{exp.total_steps - 1}.mp4")
 
 
     collector.reset()
