@@ -61,7 +61,7 @@ class DRQN(NNAgent):
         self.q = builder.addHead(lambda: hk.Linear(self.actions, name='q'))
 
     def values(self, x: np.ndarray, carry=None):
-        x = np.asarray(x)
+        x = np.asarray(x, dtype=np.float32)
 
         # if x is a vector, then jax handles a lack of "batch" dimension gracefully
         #   at a 5x speedup
@@ -213,7 +213,7 @@ class DRQN(NNAgent):
 
         self.carry = None
         self.buffer.flush()
-        x = np.asarray(x)
+        x = np.asarray(x, dtype=np.float32)
         carry = self.values(x)[2]
         pi = self.policy(x)
         a = sample(pi, rng=self.rng)

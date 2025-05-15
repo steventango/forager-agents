@@ -323,6 +323,21 @@ def buildFeatureNetwork(inputs: Tuple, params: Dict[str, Any], rng: Any):
             net = TMazeGRUNetReLU(hidden=hidden, learn_initial_h=params.get('learn_initial_h', True), name='TMazeGRUNetReLU')
             return net(x, *args, **kwargs)
 
+        elif name == 'MazeNetReLU':
+            # Use Pytorch default initialization for Conv2d
+            # see https://github.com/pytorch/pytorch/blob/9bc9d4cdb4355a385a7d7959f07d04d1648d6904/torch/nn/modules/conv.py#L178
+            xavier = hk.initializers.VarianceScaling(1.0, "fan_avg", "uniform")
+            layers = [
+                hk.Conv2D(output_channels=32, kernel_shape=4, stride=1, padding=[(1, 1)], w_init=xavier, name='conv'),
+                jax.nn.relu,
+                hk.Conv2D(output_channels=16, kernel_shape=4, stride=2, padding=[(2, 2)], w_init=xavier, name='conv_1'),
+                jax.nn.relu,
+                hk.Flatten(name='flatten'),
+                hk.Linear(hidden, w_init=xavier, name='linear'),
+                jax.nn.relu,
+                hk.Flatten(name='phi'),
+            ]
+
         elif name == 'MazeGRUNetReLU':
             net = MazeGRUNetReLU(hidden=hidden, learn_initial_h=params.get('learn_initial_h', True), name='MazeGRUNetReLU')
             return net(x, *args, **kwargs)

@@ -126,7 +126,7 @@ class NNAgent(BaseAgent):
     # -- Base agent interface --
     # --------------------------
     def values(self, x: np.ndarray, *args, **kwargs):
-        x = np.asarray(x)
+        x = np.asarray(x, dtype=np.float32)
 
         # if x is a vector, then jax handles a lack of "batch" dimension gracefully
         #   at a 5x speedup
@@ -145,7 +145,7 @@ class NNAgent(BaseAgent):
     # ----------------------
     def start(self, x: np.ndarray):  # type: ignore
         self.buffer.flush()
-        x = np.asarray(x)
+        x = np.asarray(x, dtype=np.float32)
         pi = self.policy(x)
         a = sample(pi, rng=self.rng)
         self.buffer.add_step(
