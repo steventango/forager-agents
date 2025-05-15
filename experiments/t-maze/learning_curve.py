@@ -32,6 +32,13 @@ COLORS = {
     'PrioritizedDQN': 'purple',
 }
 
+SKIP = {
+    "DRQN-8-4",
+    "DRQN-4-8",
+    "DRQN-16-2",
+    "DRQN-32-1",
+}
+
 # keep 1 in every SUBSAMPLE measurements
 SUBSAMPLE = 1000
 
@@ -73,6 +80,9 @@ if __name__ == "__main__":
         f, ax = plt.subplots()
         for alg, sub_df in split_over_column(env_df, col='algorithm'):
             if len(sub_df) == 0: continue
+
+            if alg in SKIP:
+                continue
 
             report = Hypers.select_best_hypers(
                 sub_df,
