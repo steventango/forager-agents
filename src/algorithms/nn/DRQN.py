@@ -9,8 +9,8 @@ from algorithms.nn.components.RNNReplayBuffer import CarryBatch
 from representations.networks import NetworkBuilder
 from utils.jax import huber_loss, mse_loss
 from ReplayTables.interface import Timestep, TransIds
+from utils.hk import MultiLayerHead
 from utils.policies import egreedy_probabilities, sample
-
 import jax
 import chex
 import optax
@@ -32,8 +32,7 @@ def q_loss(q, a, r, gamma, qp):
     target = jax.lax.stop_gradient(target)
     delta = target - q[a]
 
-    #return huber_loss(1.0, q[a], target), {
-    return mse_loss(q[a], target), {
+    return huber_loss(1.0, q[a], target), {
         'delta': delta,
     }
 
@@ -58,7 +57,9 @@ class DRQN(NNAgent):
     # -- NN agent interface --
     # ------------------------
     def _build_heads(self, builder: NetworkBuilder) -> None:
-        self.q = builder.addHead(lambda: hk.Linear(self.actions, name='q'))
+        self.q = builder.addHead(
+            lambda: MultiLayerHead(actions=self.actions, name='q')
+        )
 
     def values(self, x: np.ndarray, carry=None):
         x = np.asarray(x, dtype=np.float32)
@@ -261,6 +262,13 @@ class DRQN(NNAgent):
                 'reset': False
                 }
         ))
+
+        if self.epsilon_steps is not None:
+            self.epsilon = max(
+                self.final_epsilon,
+                self.initial_epsilon - (self.initial_epsilon - self.final_epsilon) * self.steps / self.epsilon_steps,
+            )
+
 
         self.update()
         return a

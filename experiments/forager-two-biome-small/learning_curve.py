@@ -35,8 +35,8 @@ COLORS = {
     "DQN-15": "#ff00ff",
     'DQN-17': 'red',
     "DRQN-3": "#00ffff",
-    "DRQN-5": GDMColor.BLUE,
-    "DRQN-15": "#ff00ff",
+    "DRQN-5": "#EEFF00",
+    "DRQN-15": "#550055",
     'DRQN-17': 'red',
     'Random': '#000000',
     "Random": GDMColor.BLACK,
@@ -106,6 +106,7 @@ if __name__ == "__main__":
                 statistic=Statistic.mean,
             )
 
+            print(alg)
             print('-' * 25)
             Hypers.pretty_print(report)
 
@@ -142,19 +143,16 @@ if __name__ == "__main__":
             ax.set_ylabel('Average Reward')
             ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
-    # ax.legend(ncol=2, frameon=False)
+    ax.legend(ncol=2, frameon=False)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    if should_save:
-        save(
-            save_path=f'{path}/plots',
-            plot_name=f'learning_curve',
-            save_type=save_type,
-            width=1
-        )
-        plt.clf()
-    else:
-        plt.show()
-        exit()
+
+    save(
+        save_path=f'{path}/plots',
+        plot_name=f'learning_curve',
+        save_type="pdf",
+        width=1
+    )
+    plt.clf()

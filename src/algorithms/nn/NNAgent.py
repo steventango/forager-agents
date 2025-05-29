@@ -67,6 +67,8 @@ class NNAgent(BaseAgent):
             self.optimizer_params["alpha"],
             self.optimizer_params["beta1"],
             self.optimizer_params["beta2"],
+            self.optimizer_params.get("eps", 1e-8),
+
         )
         opt_state = self.optimizer.init(net_params)
 
@@ -184,6 +186,12 @@ class NNAgent(BaseAgent):
                 terminal=False,
             )
         )
+
+        if self.epsilon_steps is not None:
+            self.epsilon = max(
+                self.final_epsilon,
+                self.initial_epsilon - (self.initial_epsilon - self.final_epsilon) * self.steps / self.epsilon_steps,
+            )
 
         self.update()
         return a

@@ -176,7 +176,7 @@ class ForagerGRUNet(hk.Module):
         super().__init__(name=name)
         self.hidden = hidden
         w_init = hk.initializers.Orthogonal(np.sqrt(2))
-        self.conv = hk.Conv2D(output_channels=16, kernel_shape=3, stride=1, w_init=w_init, name='conv')
+        self.conv = hk.Conv2D(output_channels=16, kernel_shape=3, stride=2, w_init=w_init, name='conv')
         self.flatten = hk.Flatten(preserve_dims=2, name='flatten')
         self.gru = GRU(self.hidden, learn_initial_h=learn_initial_h, name='gru')
         self.phi = hk.Flatten(preserve_dims=2, name='phi')

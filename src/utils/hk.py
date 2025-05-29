@@ -64,3 +64,26 @@ class DuelingHeads(hk.Module):
         v = inputs.dot(wv) + bv
 
         return v + (adv - jnp.mean(adv, axis=-1, keepdims=True))
+
+
+class MultiLayerHead(hk.Module):
+  def __init__(self, width=64, actions=2, name=None):
+    super().__init__(name=name)
+    # TODO: this is different initialization
+    w_init = hk.initializers.VarianceScaling(1.0, "fan_avg", "uniform")
+    b_init = hk.initializers.Constant(0)
+    self.hidden1 = hk.Linear(width, w_init=w_init, b_init=b_init, name='h1')
+    # we only used 1 hidden layer 64 for the other Forager networks
+    # w_init = hk.initializers.Orthogonal(np.sqrt(2))
+    # b_init = hk.initializers.Constant(0)
+
+    # out = []
+    # for width in layers:
+    #     out.append(hk.Linear(width, w_init=w_init, b_init=b_init, name=name))
+    #     out.append(jax.nn.relu)
+    self.hidden2 = hk.Linear(width, w_init=w_init, b_init=b_init, name='h2')
+    # this is fine.
+    self.out = hk.Linear(actions, name='out')
+
+  def __call__(self, x):
+    return self.out(jax.nn.relu(self.hidden2(jax.nn.relu(self.hidden1(x)))))
