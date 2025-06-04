@@ -1,9 +1,11 @@
-import jax
-import haiku as hk
-import jax.numpy as jnp
-import utils.chex as cxu
-
 from typing import Callable, Dict, Optional, Sequence
+
+import haiku as hk
+import jax
+import jax.numpy as jnp
+import numpy as np
+
+import utils.chex as cxu
 
 Init = hk.initializers.Initializer
 Layer = Callable[[jax.Array], jax.Array]
@@ -69,21 +71,10 @@ class DuelingHeads(hk.Module):
 class MultiLayerHead(hk.Module):
   def __init__(self, width=64, actions=2, name=None):
     super().__init__(name=name)
-    # TODO: this is different initialization
-    w_init = hk.initializers.VarianceScaling(1.0, "fan_avg", "uniform")
+    w_init = hk.initializers.Orthogonal(np.sqrt(2))
     b_init = hk.initializers.Constant(0)
-    self.hidden1 = hk.Linear(width, w_init=w_init, b_init=b_init, name='h1')
-    # we only used 1 hidden layer 64 for the other Forager networks
-    # w_init = hk.initializers.Orthogonal(np.sqrt(2))
-    # b_init = hk.initializers.Constant(0)
-
-    # out = []
-    # for width in layers:
-    #     out.append(hk.Linear(width, w_init=w_init, b_init=b_init, name=name))
-    #     out.append(jax.nn.relu)
-    self.hidden2 = hk.Linear(width, w_init=w_init, b_init=b_init, name='h2')
-    # this is fine.
+    self.hidden = hk.Linear(width, w_init=w_init, b_init=b_init, name='h1')
     self.out = hk.Linear(actions, name='out')
 
   def __call__(self, x):
-    return self.out(jax.nn.relu(self.hidden2(jax.nn.relu(self.hidden1(x)))))
+    return self.out(jax.nn.relu(self.hidden(x)))
