@@ -115,8 +115,8 @@ for idx in indices:
         glue.start()
 
     recorded_frames = []
-    video_frequency = int(0.1 * exp.total_steps)
-    video_length = 100_000
+    video_frequency = 100_000
+    video_length = 1_000
 
     with open(path + '/hypers.json', 'w') as f:
         hypers["run"] = run
@@ -127,7 +127,7 @@ for idx in indices:
     image = image.resize((rgb_array.shape[1] * 10, rgb_array.shape[0] * 10), Image.NEAREST)
     image.save(path + f"/env.png")
 
-    for step in tqdm(range(glue.total_steps, exp.total_steps)):
+    for step in (pbar := tqdm(range(glue.total_steps, exp.total_steps))):
         collector.next_frame()
         chk.maybe_save()
         interaction = glue.step()
@@ -139,9 +139,10 @@ for idx in indices:
             fps = step / (time.time() - start_time)
 
             avg_reward = collector.get_last('reward')
+            pbar.set_description(f'r_avg: {avg_reward:.3f}')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
 
-        if step > 899999 and step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
+        if step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
             rgb_array = env.render()
             image = Image.fromarray(rgb_array)
             image = image.resize((rgb_array.shape[1] // 2, rgb_array.shape[0] // 2), Image.NEAREST)
