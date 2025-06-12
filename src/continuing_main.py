@@ -32,6 +32,7 @@ parser.add_argument('-i', '--idxs', nargs='+', type=int, required=True)
 parser.add_argument('--save_path', type=str, default='./')
 parser.add_argument('--checkpoint_path', type=str, default='./checkpoints/')
 parser.add_argument('--silent', action='store_true', default=False)
+parser.add_argument('--record', action='store_true', default=False)
 parser.add_argument('--gpu', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -142,13 +143,13 @@ for idx in indices:
             pbar.set_description(f'r_avg: {avg_reward:.3f}')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
 
-        if step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
+        if args.record and step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
             rgb_array = env.render()
             image = Image.fromarray(rgb_array)
             image = image.resize((rgb_array.shape[1] // 2, rgb_array.shape[0] // 2), Image.NEAREST)
             frame = np.array(image)
             recorded_frames.append(frame)
-        elif step % video_frequency == video_length and len(recorded_frames) > 0:
+        elif args.record and step % video_frequency == video_length and len(recorded_frames) > 0:
             clip = ImageSequenceClip(recorded_frames, fps=8)
             clip.write_videofile(path + f"/{max(step - video_length, 0)}-{step - 1}.mp4")
             recorded_frames = []
