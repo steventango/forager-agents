@@ -1,67 +1,51 @@
 import os
 import sys
-
 sys.path.append(os.getcwd() + '/src')
 
-import matplotlib.pyplot as plt
 import numpy as np
-import RlEvaluation.hypers as Hypers
-import RlEvaluation.metrics as Metrics
-from PyExpPlotting.matplot import save, setDefaultConference, setFonts
+import matplotlib.pyplot as plt
+from PyExpPlotting.matplot import save, setDefaultConference
 from PyExpUtils.results.Collection import ResultCollection
+
 from RlEvaluation.config import data_definition
 from RlEvaluation.interpolation import compute_step_return
+from RlEvaluation.temporal import TimeSummary, extract_multiple_learning_curves, curve_percentile_bootstrap_ci
 from RlEvaluation.statistics import Statistic
-from RlEvaluation.temporal import (
-    TimeSummary,
-    curve_percentile_bootstrap_ci,
-    extract_learning_curves,
-)
 from RlEvaluation.utils.pandas import split_over_column
+
+import RlEvaluation.hypers as Hypers
+import RlEvaluation.metrics as Metrics
 
 # from analysis.confidence_intervals import bootstrapCI
 from experiment.ExperimentModel import ExperimentModel
 from experiment.tools import parseCmdLineArgs
-from utils.plotting import GDMColor
 
 # makes sure figures are right size for the paper/column widths
 # also sets fonts to be right size when saving
 setDefaultConference('jmlr')
-setFonts(20)
 
 COLORS = {
-    "DQN-3": "#00ffff",
-    "DQN-5": "#3ddcff",
-    "DQN-15": "#ff00ff",
-    'DQN-17': 'red',
-    "DRQN-3": "#00ffff",
-    "DRQN-5": "#EEFF00",
-    "DRQN-15": "#550055",
-    'DRQN-17': 'red',
-    'Random': '#000000',
-    "Random": GDMColor.BLACK,
-    "Greedy": GDMColor.GREEN,
-    "Greedy-122": GDMColor.RED,
+    'SoftmaxAC': 'grey',
+    'EQRC': 'blue',
+    'ESARSA': 'red',
+    'DQN': 'black',
+    'PrioritizedDQN': 'purple',
 }
 
-ALG_MAP = {
-    "Greedy": "Search Oracle",
-    "Greedy-122": "Search Nearest",
+SKIP = {
+    "DRQN-8-4",
+    "DRQN-4-8",
+    "DRQN-16-2",
+    "DRQN-32-1",
 }
 
-SKIP = [
-    "DQN-3",
-    "DQN-17"
-]
-
-METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-POINTS = 500
+SUBSAMPLE = 1000
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
 
-    results = ResultCollection.fromExperiments(Model=ExperimentModel, metrics=[METRIC])
+    results = ResultCollection.fromExperiments(Model=ExperimentModel)
 
     data_definition(
         hyper_cols=results.get_hyperparameter_columns(),
@@ -88,39 +72,39 @@ if __name__ == "__main__":
     )
 
     assert df is not None
+    Metrics.add_step_weighted_return(df)
 
     exp = results.get_any_exp()
 
-    f, ax = plt.subplots()
-    for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: x[0]):
-        # for env, env_df in split_over_column(df, col='environment.aperture'):
+    for env, env_df in split_over_column(df, col='environment'):
+        f, ax = plt.subplots()
+        for alg, sub_df in split_over_column(env_df, col='algorithm'):
+            if len(sub_df) == 0: continue
+
             if alg in SKIP:
                 continue
-            if len(sub_df) == 0: continue
 
             report = Hypers.select_best_hypers(
                 sub_df,
-                metric=METRIC,
+                metric='step_weighted_return',
                 prefer=Hypers.Preference.high,
                 time_summary=TimeSummary.sum,
                 statistic=Statistic.mean,
             )
 
-            print(alg)
             print('-' * 25)
+            print(env, alg)
             Hypers.pretty_print(report)
 
-            xs, ys = extract_learning_curves(
+            xs, ys = extract_multiple_learning_curves(
                 sub_df,
-                report.best_configuration,
-                metric=METRIC,
+                report.uncertainty_set_configurations,
+                metric='return',
                 interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
             )
 
-            subsample = len(xs[0]) // POINTS
-            xs = np.asarray(xs)[:, ::subsample]
-            ys = np.asarray(ys)[:, ::subsample]
-            print(xs.shape, ys.shape)
+            xs = np.asarray(xs)[:, ::SUBSAMPLE]
+            ys = np.asarray(ys)[:, ::SUBSAMPLE]
 
             # make sure all of the x values are the same for each curve
             assert np.all(np.isclose(xs[0], xs))
@@ -131,28 +115,17 @@ if __name__ == "__main__":
                 statistic=Statistic.mean,
             )
 
-            label = ALG_MAP.get(alg, alg)
+            lines = ax.plot(xs[0], res.sample_stat, label=alg, color=COLORS.get(alg), linewidth=0.5)
+            ax.fill_between(xs[0], res.ci[0], res.ci[1], color=lines[0].get_color(), alpha=0.2)
 
-            ax.plot(xs[0], res.sample_stat, label=label, color=COLORS[alg], linewidth=0.5)
-            if len(ys) <= 5:
-                for x, y in zip(xs, ys):
-                    ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
-            else:
-                ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
-            ax.set_xlabel("Time steps")
-            ax.set_ylabel('Average Reward')
-            ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
-
-    ax.legend(ncol=2, frameon=False)
-
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-
-    save(
-        save_path=f'{path}/plots',
-        plot_name=f'learning_curve',
-        save_type="pdf",
-        width=1
-    )
-    plt.clf()
+        ax.legend()
+        if should_save:
+            save(
+                save_path=f'{path}/plots',
+                plot_name=f'{env}',
+                save_type=save_type,
+            )
+            plt.clf()
+        else:
+            plt.show()
+            exit()

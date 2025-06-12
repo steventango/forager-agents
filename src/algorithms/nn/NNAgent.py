@@ -1,6 +1,7 @@
 import jax
 import optax
 import numpy as np
+from algorithms.nn.components.RNNReplayBuffer import RNNReplayBuffer
 import utils.chex as cxu
 
 from abc import abstractmethod
@@ -14,13 +15,14 @@ from representations.networks import NetworkBuilder
 from utils.checkpoint import checkpointable
 from utils.policies import egreedy_probabilities, sample
 
+
 @cxu.dataclass
 class AgentState:
     params: Any
     optim: optax.OptState
 
 
-@checkpointable(('buffer', 'steps', 'state', 'updates'))
+@checkpointable(("buffer", "steps", "state", "updates"))
 class NNAgent(BaseAgent):
     def __init__(self, observations: Tuple[int, ...], actions: int, params: Dict, collector: Collector, seed: int):
         super().__init__(observations, actions, params, collector, seed)
@@ -52,34 +54,45 @@ class NNAgent(BaseAgent):
         # ---------------------
         builder = NetworkBuilder(observations, self.rep_params, seed)
         self._build_heads(builder)
-        self.phi = builder.getFeatureFunction()
+        if self.__class__.__name__ == "DRQN":
+            self.phi = builder.getRecurrentFeatureFunction()
+        else:
+            self.phi = builder.getFeatureFunction()
         net_params = builder.getParams()
 
         # ---------------
         # -- Optimizer --
         # ---------------
         self.optimizer = optax.adam(
-            self.optimizer_params['alpha'],
-            self.optimizer_params['beta1'],
-            self.optimizer_params['beta2'],
+            self.optimizer_params["alpha"],
+            self.optimizer_params["beta1"],
+            self.optimizer_params["beta2"],
             self.optimizer_params.get("eps", 1e-8),
+
         )
         opt_state = self.optimizer.init(net_params)
 
         # ------------------
         # -- Data ingress --
         # ------------------
-        self.buffer_size = params['buffer_size']
-        self.batch_size = params['batch']
-        self.update_freq = params.get('update_freq', 1)
-        self.minimum_replay_history = params.get('minimum_replay_history', self.batch_size)
+        self.buffer_size = params["buffer_size"]
+        self.batch_size = params["batch"]
+        self.update_freq = params.get("update_freq", 1)
+        self.minimum_replay_history = params.get("minimum_replay_history", self.batch_size)
+        self.sequence_length = params.get("sequence_length", 1)
 
-        self.buffer = build_buffer(
-            buffer_type=params['buffer_type'],
-            max_size=self.buffer_size,
-            lag=self.n_step,
-            rng=self.rng,
-            config=params.get('buffer_config', {}),
+        self.normalizer_params = params.get("normalizer", {})
+
+        self.buffer = (
+            RNNReplayBuffer(self.buffer_size, self.n_step, self.rng, self.sequence_length)
+            if params["buffer_type"] == "rnn_uniform"
+            else build_buffer(
+                buffer_type=params["buffer_type"],
+                max_size=self.buffer_size,
+                lag=self.n_step,
+                rng=self.rng,
+                config=params.get("buffer_config", {}),
+            )
         )
 
         # --------------------------
@@ -98,16 +111,13 @@ class NNAgent(BaseAgent):
     # ------------------------
 
     @abstractmethod
-    def _build_heads(self, builder: NetworkBuilder) -> None:
-        ...
+    def _build_heads(self, builder: NetworkBuilder) -> None: ...
 
     @abstractmethod
-    def _values(self, state: Any, x: np.ndarray) -> jax.Array:
-        ...
+    def _values(self, state: Any, x: np.ndarray) -> jax.Array: ...
 
     @abstractmethod
-    def update(self) -> None:
-        ...
+    def update(self) -> None: ...
 
     def policy(self, obs: np.ndarray) -> np.ndarray:
         q = self.values(obs)
@@ -117,39 +127,41 @@ class NNAgent(BaseAgent):
     # --------------------------
     # -- Base agent interface --
     # --------------------------
-    def values(self, x: np.ndarray):
-        x = np.asarray(x)
+    def values(self, x: np.ndarray, *args, **kwargs):
+        x = np.asarray(x, dtype=np.float32)
 
         # if x is a vector, then jax handles a lack of "batch" dimension gracefully
         #   at a 5x speedup
         # if x is a tensor, jax does not handle lack of "batch" dim gracefully
         if len(x.shape) > 1:
             x = np.expand_dims(x, 0)
-            q = self._values(self.state, x)[0]
+            q = self._values(self.state, x, *args, **kwargs)[0]
 
         else:
-            q = self._values(self.state, x)
+            q = self._values(self.state, x, *args, **kwargs)
 
         return jax.device_get(q)
 
     # ----------------------
     # -- RLGlue interface --
     # ----------------------
-    def start(self, x: np.ndarray):
+    def start(self, x: np.ndarray):  # type: ignore
         self.buffer.flush()
-        x = np.asarray(x)
+        x = np.asarray(x, dtype=np.float32)
         pi = self.policy(x)
         a = sample(pi, rng=self.rng)
-        self.buffer.add_step(Timestep(
-            x=x,
-            a=a,
-            r=None,
-            gamma=self.gamma,
-            terminal=False,
-        ))
+        self.buffer.add_step(
+            Timestep(
+                x=x,
+                a=a,
+                r=None,
+                gamma=self.gamma,
+                terminal=False,
+            )
+        )
         return a
 
-    def step(self, r: float, xp: np.ndarray | None, extra: Dict[str, Any]):
+    def step(self, r: float, xp: np.ndarray | None, extra: Dict[str, Any]):  # type: ignore
         a = -1
 
         # sample next action
@@ -159,39 +171,44 @@ class NNAgent(BaseAgent):
             a = sample(pi, rng=self.rng)
 
         # see if the problem specified a discount term
-        gamma = extra.get('gamma', 1.0)
+        gamma = extra.get("gamma", 1.0)
 
         # possibly process the reward
         if self.reward_clip > 0:
             r = np.clip(r, -self.reward_clip, self.reward_clip)
 
-        self.buffer.add_step(Timestep(
-            x=xp,
-            a=a,
-            r=r,
-            gamma=self.gamma * gamma,
-            terminal=False,
-        ))
+        self.buffer.add_step(
+            Timestep(
+                x=xp,
+                a=a,
+                r=r,
+                gamma=self.gamma * gamma,
+                terminal=False,
+            )
+        )
 
         if self.epsilon_steps is not None:
             self.epsilon = max(
                 self.final_epsilon,
                 self.initial_epsilon - (self.initial_epsilon - self.final_epsilon) * self.steps / self.epsilon_steps,
             )
+
         self.update()
         return a
 
-    def end(self, r: float, extra: Dict[str, Any]):
+    def end(self, r: float, extra: Dict[str, Any]):  # type: ignore
         # possibly process the reward
         if self.reward_clip > 0:
             r = np.clip(r, -self.reward_clip, self.reward_clip)
 
-        self.buffer.add_step(Timestep(
-            x=np.zeros(self.observations),
-            a=-1,
-            r=r,
-            gamma=0,
-            terminal=True,
-        ))
+        self.buffer.add_step(
+            Timestep(
+                x=np.zeros(self.observations),
+                a=-1,
+                r=r,
+                gamma=0,
+                terminal=True,
+            )
+        )
 
         self.update()

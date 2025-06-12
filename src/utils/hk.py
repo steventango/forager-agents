@@ -1,9 +1,11 @@
-import jax
-import haiku as hk
-import jax.numpy as jnp
-import utils.chex as cxu
-
 from typing import Callable, Dict, Optional, Sequence
+
+import haiku as hk
+import jax
+import jax.numpy as jnp
+import numpy as np
+
+import utils.chex as cxu
 
 Init = hk.initializers.Initializer
 Layer = Callable[[jax.Array], jax.Array]
@@ -64,3 +66,15 @@ class DuelingHeads(hk.Module):
         v = inputs.dot(wv) + bv
 
         return v + (adv - jnp.mean(adv, axis=-1, keepdims=True))
+
+
+class MultiLayerHead(hk.Module):
+  def __init__(self, width=64, actions=2, name=None):
+    super().__init__(name=name)
+    w_init = hk.initializers.Orthogonal(np.sqrt(2))
+    b_init = hk.initializers.Constant(0)
+    self.hidden = hk.Linear(width, w_init=w_init, b_init=b_init, name='h1')
+    self.out = hk.Linear(actions, name='out')
+
+  def __call__(self, x):
+    return self.out(jax.nn.relu(self.hidden(x)))
