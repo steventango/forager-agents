@@ -143,7 +143,7 @@ for idx in indices:
             pbar.set_description(f'r_avg: {avg_reward:.3f}')
             logger.debug(f'{step} {avg_reward} {avg_time:.4}ms {int(fps)}')
 
-        if args.record and step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length:
+        if args.record and (step % video_frequency < video_length or (exp.total_steps - 1) - step < video_length):
             rgb_array = env.render()
             image = Image.fromarray(rgb_array)
             image = image.resize((rgb_array.shape[1] // 2, rgb_array.shape[0] // 2), Image.NEAREST)
