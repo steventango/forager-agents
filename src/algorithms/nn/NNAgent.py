@@ -1,9 +1,10 @@
 import jax
+import jmp
+import haiku as hk
 import optax
 import numpy as np
 from algorithms.nn.components.RNNReplayBuffer import RNNReplayBuffer
 import utils.chex as cxu
-
 from abc import abstractmethod
 from typing import Any, Dict, Tuple
 from PyExpUtils.collection.Collector import Collector
@@ -20,6 +21,13 @@ from utils.policies import egreedy_probabilities, sample
 class AgentState:
     params: Any
     optim: optax.OptState
+    loss_scale: jmp.LossScale
+
+
+
+def get_initial_loss_scale(mp_scale_type, mp_scale_value) -> jmp.LossScale:
+    cls = getattr(jmp, f'{mp_scale_type}LossScale')
+    return cls(mp_scale_value) if cls is not jmp.NoOpLossScale else cls()
 
 
 @checkpointable(("buffer", "steps", "state", "updates"))
@@ -49,10 +57,17 @@ class NNAgent(BaseAgent):
         )
         self.reward_clip = params.get("reward_clip", 0)
 
+        self.mp_policy = jmp.get_policy(params.get('mp_policy', 'p=f32,c=f32,o=f32'))
+        self.mp_bn_policy = jmp.get_policy(params.get('mp_bn_policy', 'p=f32,c=f32,o=f32')).with_output_dtype(self.mp_policy.compute_dtype)
+        self.mp_scale_type = params.get('mp_scale_type', 'NoOp')
+        self.mp_scale_value = params.get('mp_scale_value', 2 ** 15)
+        self.mp_skip_nonfinite = params.get('mp_skip_nonfinite', False)
+        self.loss_scale = get_initial_loss_scale(self.mp_scale_type, self.mp_scale_value)
+
         # ---------------------
         # -- NN Architecture --
         # ---------------------
-        builder = NetworkBuilder(observations, self.rep_params, seed)
+        builder = NetworkBuilder(observations, self.rep_params, seed, self.mp_policy)
         self._build_heads(builder)
         if self.__class__.__name__ == "DRQN":
             self.phi = builder.getRecurrentFeatureFunction()
@@ -101,6 +116,7 @@ class NNAgent(BaseAgent):
         self.state = AgentState(
             params=net_params,
             optim=opt_state,
+            loss_scale=self.loss_scale,
         )
 
         self.steps = 0

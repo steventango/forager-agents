@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import jax
 import jax.numpy as jnp
+import jmp
 import haiku as hk
 
 import utils.hk as hku
@@ -221,18 +222,19 @@ class ForagerGRUNet(hk.Module):
 
 
 class NetworkBuilder:
-    def __init__(self, input_shape: Tuple, params: Dict[str, Any], seed: int):
+    def __init__(self, input_shape: Tuple, params: Dict[str, Any], seed: int, mp_policy: jmp.Policy):
         self._input_shape = tuple(input_shape)
         self._h_params = params
         self._rng, feat_rng = jax.random.split(jax.random.PRNGKey(seed))
 
-        self._feat_net, self._feat_params = buildFeatureNetwork(input_shape, params, feat_rng)
+        self._feat_net, self._feat_params = buildFeatureNetwork(input_shape, params, feat_rng, mp_policy)
 
         self._params = {
             'phi': self._feat_params,
         }
 
         self._retrieved_params = False
+
 
     def getParams(self):
         self._retrieved_params = True
@@ -285,7 +287,7 @@ class NetworkBuilder:
         return _inner
 
 
-def reluLayers(layers: List[int], name: Optional[str] = None):
+def reluLayers(layers: List[int], mp_policy: jmp.Policy, name: Optional[str] = None):
     w_init = hk.initializers.Orthogonal(np.sqrt(2))
     b_init = hk.initializers.Constant(0)
 
@@ -296,34 +298,39 @@ def reluLayers(layers: List[int], name: Optional[str] = None):
 
     return out
 
-def buildFeatureNetwork(inputs: Tuple, params: Dict[str, Any], rng: Any):
+def buildFeatureNetwork(inputs: Tuple, params: Dict[str, Any], rng: Any, mp_policy: jmp.Policy):
+    hk.mixed_precision.set_policy(hk.Linear, mp_policy)
     def _inner(x: jax.Array, *args, **kwargs):
         name = params['type']
         hidden = params['hidden']
 
         if name == 'TwoLayerRelu':
-            layers = reluLayers([hidden, hidden], name='phi')
+            layers = reluLayers([hidden, hidden], mp_policy, name='phi')
 
         elif name == 'OneLayerRelu':
-            layers = reluLayers([hidden], name='phi')
+            layers = reluLayers([hidden], mp_policy, name='phi')
 
         elif name == 'ForagerNet':
+            hk.mixed_precision.set_policy(hk.Conv2D, mp_policy)
             w_init = hk.initializers.Orthogonal(np.sqrt(2))
             layers = [
                 hk.Conv2D(16, 3, 1, w_init=w_init, name='phi'),
                 jax.nn.relu,
                 hk.Flatten(name='phi'),
             ]
-            layers += reluLayers([hidden], name='phi')
+            layers += reluLayers([hidden], mp_policy, name='phi')
         elif name == 'ForagerGRUNet':
+            hk.mixed_precision.set_policy(ForagerGRUNet, mp_policy)
             net = ForagerGRUNet(hidden=hidden, learn_initial_h=params.get('learn_initial_h', True), name='ForagerGRUNet')
             return net(x, *args, **kwargs)
 
         elif name == 'TMazeGRUNetReLU':
+            hk.mixed_precision.set_policy(TMazeGRUNetReLU, mp_policy)
             net = TMazeGRUNetReLU(hidden=hidden, learn_initial_h=params.get('learn_initial_h', True), name='TMazeGRUNetReLU')
             return net(x, *args, **kwargs)
 
         elif name == 'MazeNetReLU':
+            hk.mixed_precision.set_policy(hk.Conv2D, mp_policy)
             # Use Pytorch default initialization for Conv2d
             # see https://github.com/pytorch/pytorch/blob/9bc9d4cdb4355a385a7d7959f07d04d1648d6904/torch/nn/modules/conv.py#L178
             xavier = hk.initializers.VarianceScaling(1.0, "fan_avg", "uniform")
@@ -339,6 +346,7 @@ def buildFeatureNetwork(inputs: Tuple, params: Dict[str, Any], rng: Any):
             ]
 
         elif name == 'MazeGRUNetReLU':
+            hk.mixed_precision.set_policy(MazeGRUNetReLU, mp_policy)
             net = MazeGRUNetReLU(hidden=hidden, learn_initial_h=params.get('learn_initial_h', True), name='MazeGRUNetReLU')
             return net(x, *args, **kwargs)
 

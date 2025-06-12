@@ -31,6 +31,8 @@
         "representation": {
             "type": "ForagerGRUNet",
             "hidden": 64
-        }
+        },
+        "mp_policy": "p=f32,c=bf16,o=f32",
+        "mp_bn_policy": "p=f32,c=bf16,o=f32"
     }
 }

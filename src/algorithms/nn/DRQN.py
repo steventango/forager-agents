@@ -1,29 +1,34 @@
 from copy import deepcopy
 from functools import partial
 from typing import Any, Dict, Tuple
-from PyExpUtils.collection.Collector import Collector
-from ReplayTables.ReplayBuffer import Batch, LaggedTimestep
-from jax.tree_util import tree_flatten
-from algorithms.nn.NNAgent import NNAgent
-from algorithms.nn.components.RNNReplayBuffer import CarryBatch
-from representations.networks import NetworkBuilder
-from utils.jax import huber_loss, mse_loss
-from ReplayTables.interface import Timestep, TransIds
-from utils.hk import MultiLayerHead
-from utils.policies import egreedy_probabilities, sample
-import jax
+
 import chex
-import optax
-import numpy as np
 import haiku as hk
+import jax
 import jax.numpy as jnp
+import jmp
+import numpy as np
+import optax
+from jax.tree_util import tree_flatten
+from PyExpUtils.collection.Collector import Collector
+from ReplayTables.interface import Timestep, TransIds
+from ReplayTables.ReplayBuffer import Batch, LaggedTimestep
+
 import utils.chex as cxu
+from algorithms.nn.components.RNNReplayBuffer import CarryBatch
+from algorithms.nn.NNAgent import NNAgent
+from representations.networks import NetworkBuilder
+from utils.hk import MultiLayerHead
+from utils.jax import huber_loss, mse_loss
+from utils.policies import egreedy_probabilities, sample
+
 
 @cxu.dataclass
 class AgentState:
     params: Any
     target_params: Any
     optim: optax.OptState
+    loss_scale: jmp.LossScale
 
 
 def q_loss(q, a, r, gamma, qp):
@@ -43,14 +48,18 @@ class DRQN(NNAgent):
         self.target_refresh = int(params['target_refresh'])
         self.train_use_all_steps = params.get('train_use_all_steps', True)
         self.burn_in_steps = int(params.get('burn_in_steps', 0))
+
         self.trainable_steps = self.sequence_length - self.burn_in_steps
         if self.trainable_steps < 1:
             raise Exception("Sequence length must be longer than burn in steps")
         self.carry = None
         self.state = AgentState(
             params=self.state.params,
-            target_params=deepcopy(self.state.params), # without deepcopy, load_from_checkpoint overwrites params with target_params
+            target_params=deepcopy(
+                self.state.params
+            ),  # without deepcopy, load_from_checkpoint overwrites params with target_params
             optim=self.state.optim,
+            loss_scale=self.loss_scale,
         )
 
     # ------------------------
@@ -127,21 +136,28 @@ class DRQN(NNAgent):
     @partial(jax.jit, static_argnums=0)
     def _computeUpdate(self, state: AgentState, batch: LaggedTimestep, weights: jax.Array):
         grad_fn = jax.grad(self._loss, has_aux=True)
-        grad, metrics = grad_fn(state.params, state.target_params, batch, weights)
+        grads, metrics = grad_fn(state.params, state.target_params, state.loss_scale, batch, weights)
 
-        updates, optim = self.optimizer.update(grad, state.optim, state.params)
+        grads = self.mp_policy.cast_to_compute(grads)
+        grads = state.loss_scale.unscale(grads)
+        grads = self.mp_policy.cast_to_param(grads)
+
+        updates, optim = self.optimizer.update(grads, state.optim, state.params)
         params = optax.apply_updates(state.params, updates)
 
-        new_state = AgentState(
-            params=params,
-            target_params=state.target_params,
-            optim=optim,
-        )
+        if self.mp_skip_nonfinite:
+            grads_finite = jmp.all_finite(grads)
+            state.loss_scale = state.loss_scale.adjust(grads_finite)
+            params, optim = jmp.select_tree(grads_finite, (params, optim), (state.params, state.optim))
+
+        new_state = AgentState(params=params, target_params=state.target_params, optim=optim, loss_scale=state.loss_scale)
 
         return new_state, metrics
 
     # Loss is computed for the final action in the sequence
-    def _loss(self, params: hk.Params, target: hk.Params, batch: CarryBatch, weights: jax.Array):
+    def _loss(
+        self, params: hk.Params, target: hk.Params, loss_scale: jmp.LossScale, batch: CarryBatch, weights: jax.Array
+    ):
         x = batch.x
         xp = batch.xp
         carry = batch.carry
@@ -203,6 +219,7 @@ class DRQN(NNAgent):
 
         chex.assert_equal_shape((weights, losses))
         loss = jnp.mean(weights * losses)
+        loss = loss_scale.scale(loss)
 
         return loss, metrics
 
@@ -268,7 +285,6 @@ class DRQN(NNAgent):
                 self.final_epsilon,
                 self.initial_epsilon - (self.initial_epsilon - self.final_epsilon) * self.steps / self.epsilon_steps,
             )
-
 
         self.update()
         return a
