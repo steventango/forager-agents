@@ -38,6 +38,7 @@ COLORS = {
     'DQN-13': '#d72dff',
     'DQN-15': '#ff00ff',
     'DRQN-5': '#3ddcff',
+    'DRQN-15': '#3ddcff',
     'Random': '#000000',
 }
 
