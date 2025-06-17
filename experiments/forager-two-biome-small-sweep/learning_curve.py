@@ -81,6 +81,8 @@ if __name__ == "__main__":
     f, ax = plt.subplots()
     for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: int(x[0].split('-')[1])):
         if len(sub_df) == 0: continue
+        if not alg.startswith('DRQN'):
+            continue
 
         report = Hypers.select_best_hypers(
             sub_df,
@@ -100,7 +102,7 @@ if __name__ == "__main__":
             sub_df,
             report.best_configuration,
             metric=METRIC,
-            interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
+            interpolation=lambda x, y: compute_step_return(x, y, max(x) + x[1]),
         )
 
         subsample = len(xs[0]) // POINTS
