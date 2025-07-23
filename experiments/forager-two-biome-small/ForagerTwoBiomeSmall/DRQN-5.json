@@ -14,7 +14,7 @@
         "gamma": 0.99,
         "n_step": 1,
         "update_freq": 4,
-        "sequence_length": 64,
+        "sequence_length": 256,
         "environment": {
             "aperture": 5
         },

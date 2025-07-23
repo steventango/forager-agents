@@ -32,7 +32,9 @@ setFonts(20)
 COLORS = {
     'DQN-3': 'blue',
     'DQN-5': 'cyan',
+    'DQN-5-mlp': 'green',
     'DQN-15': 'magenta',
+    'DQN-15-mlp': 'red',
     'DQN-17': 'red',
     "DRQN-3": "#00ffff",
     "DRQN-5": "#EEFF00",
@@ -81,7 +83,7 @@ if __name__ == "__main__":
     f, ax = plt.subplots()
     for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: int(x[0].split('-')[1])):
         if len(sub_df) == 0: continue
-        if not alg.startswith('DRQN'):
+        if alg.startswith('DRQN'):
             continue
 
         report = Hypers.select_best_hypers(

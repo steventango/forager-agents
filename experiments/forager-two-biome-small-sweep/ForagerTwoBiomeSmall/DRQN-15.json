@@ -6,7 +6,7 @@
     "metaParameters": {
         "initial_epsilon": 1,
         "final_epsilon": 0.05,
-        "epsilon_steps": 8000,
+        "epsilon_steps": 400000,
         "target_refresh": 128,
         "buffer_type": "rnn_uniform",
         "buffer_size": 10000,
