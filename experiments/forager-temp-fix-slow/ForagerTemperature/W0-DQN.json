@@ -16,7 +16,7 @@
         "environment": {
             "repeat": 500,
             "file": 0,
-            "aperture": 15
+            "aperture": 9
         },
         "experiment": {
             "seed_offset": 0
