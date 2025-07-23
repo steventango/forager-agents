@@ -11,7 +11,7 @@ from algorithms.RandomAgent import RandomAgent
 
 
 def getAgent(name) -> Type[BaseAgent]:
-    if name.startswith("DQN"):
+    if name.startswith("DQN") or name.startswith("W0-DQN"):
         return DQN
 
     if name.startswith("PT_DQN"):
