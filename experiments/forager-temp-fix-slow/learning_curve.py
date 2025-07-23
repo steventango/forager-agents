@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.getcwd() + '/src')
+sys.path.append(os.getcwd() + "/src")
 
 from typing import Any, List, Sequence, Tuple
 
@@ -22,13 +22,15 @@ from RlEvaluation.utils.pandas import split_over_column, subset_df
 from experiment.ExperimentModel import ExperimentModel
 from experiment.tools import parseCmdLineArgs
 from utils.plotting import GDMColor
+
 # makes sure figures are right size for the paper/column widths
 # also sets fonts to be right size when saving
-setDefaultConference('jmlr')
+setDefaultConference("jmlr")
 setFonts(20)
 
 COLORS = {
     "DQN": "blue",
+    "W0-DQN": "magenta",
     "DQN-11": "magenta",
     "DQN-9": GDMColor.BLUE,
     "DQN-7": "yellow",
@@ -57,9 +59,9 @@ POINTS = 100
 PLOT_THE_FIRST = 1.0
 post_fix = "" if PLOT_THE_FIRST == 1.0 else f"_{PLOT_THE_FIRST}"
 
-BASE = 'Greedy-privileged'
-BASE_COLOR = 'grey'
-BASE_LINESTYLE = '--'
+BASE = "Greedy-privileged"
+BASE_COLOR = "grey"
+BASE_LINESTYLE = "--"
 base_post_fix = "" if BASE is None else "_based"
 
 PLOT_REWARD = False
@@ -103,13 +105,12 @@ def extract_learning_curves(
         x = non_na[dd.time_col].to_numpy().astype(np.int64)
         y = non_na[metric].to_numpy().astype(np.float64)
 
-        print('source:', x.shape, y.shape)
         # if x is not strictly increasing, there are duplicates,
         # we just take the second half for now
         if not np.all(x[1:] > x[:-1]):
-            x = x[len(x) // 2:]
-            y = y[len(y) // 2:]
-            print('processed:', x.shape, y.shape)
+            x = x[len(x) // 2 :]
+            y = y[len(y) // 2 :]
+            print("processed:", x.shape, y.shape)
 
         if interpolation is not None:
             x, y = interpolation(x, y)
@@ -127,11 +128,10 @@ if __name__ == "__main__":
 
     data_definition(
         hyper_cols=results.get_hyperparameter_columns(),
-        seed_col='seed',
-        time_col='frame',
-        environment_col='environment',
-        algorithm_col='algorithm',
-
+        seed_col="seed",
+        time_col="frame",
+        environment_col="environment",
+        algorithm_col="algorithm",
         # makes this data definition globally accessible
         # so we don't need to supply it to all API calls
         make_global=True,
@@ -141,12 +141,11 @@ if __name__ == "__main__":
         # converts path like "experiments/example/MountainCar"
         # into a new column "environment" with value "MountainCar"
         # None means to ignore a path part
-        folder_columns=(None, None, 'environment'),
-
+        folder_columns=(None, None, "environment"),
         # and creates a new column named "algorithm"
         # whose value is the name of an experiment file, minus extension.
         # For instance, ESARSA.json becomes ESARSA
-        file_col='algorithm',
+        file_col="algorithm",
     )
 
     assert df is not None
@@ -155,10 +154,13 @@ if __name__ == "__main__":
 
     f, ax = plt.subplots()
     for alg, sub_df in sorted(
-        split_over_column(df, col="algorithm"), key=lambda x: custom_order(x[0]) if x[0] != BASE else 0
+        split_over_column(df, col="algorithm"),
+        key=lambda x: custom_order(x[0]) if x[0] != BASE else 0,
     ):
-        if len(sub_df) == 0: continue
-        if alg in SKIP: continue
+        if len(sub_df) == 0:
+            continue
+        if alg in SKIP:
+            continue
 
         report = Hypers.select_best_hypers(
             sub_df,
@@ -168,7 +170,7 @@ if __name__ == "__main__":
             statistic=Statistic.mean,
         )
 
-        print('-' * 25)
+        print("-" * 25)
         print(alg)
         Hypers.pretty_print(report)
 
@@ -210,17 +212,24 @@ if __name__ == "__main__":
             sample_stat = np.abs(sample_stat)
             ys = np.abs(ys)
         if alg == BASE:
-            ax.plot(xs[0], sample_stat, label=label, color=BASE_COLOR, linestyle=BASE_LINESTYLE, linewidth=0.5)
+            ax.plot(
+                xs[0],
+                sample_stat,
+                label=label,
+                color=BASE_COLOR,
+                linestyle=BASE_LINESTYLE,
+                linewidth=0.5,
+            )
         else:
             ax.plot(xs[0], sample_stat, label=label, color=COLORS[alg], linewidth=0.5)
-        if len(ys) <= 5 and False:
+        if len(ys) <= 5:
             for x, y in zip(xs, ys):
                 ax.plot(x, y, color=COLORS[alg], linewidth=0.5, alpha=0.2)
         elif not PLOT_REWARD and alg not in SKIP_ERROR:
             ax.fill_between(xs[0], res.ci[0], res.ci[1], color=COLORS[alg], alpha=0.2)
         ax.set_xlabel("Time steps")
         if PLOT_REWARD:
-            ax.set_ylabel('Reward')
+            ax.set_ylabel("Reward")
         else:
             if BASE:
                 ax.set_ylabel("Relative Average Reward")
@@ -228,30 +237,23 @@ if __name__ == "__main__":
                 ax.set_ylabel("Average Reward")
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
 
-
     # put legend outside of plot
-    # box = ax.get_position()
-    # ax.set_position([box.x0, box.y0, box.width * 0.8, box
-    #                  .height])
-    if "Reward" not in ax.get_legend_handles_labels()[1]:
-        ax.legend(ncol=1, frameon=False)
-    else:
-        ax.legend()
+    box = ax.get_position()
+    ax.set_position((box.x0, box.y0, box.width * 0.8, box.height))
+    ax.legend(
+        ncol=1,
+        frameon=False,
+        loc="center left",
+        bbox_to_anchor=(1.0, 0.5)
+    )
 
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
     if should_save:
         save(
-            save_path=f'{path}/plots',
-            plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
-            save_type=save_type,
-            width=1,
-            height_ratio=1 / 1,
-        )
-        save(
-            save_path=f'{path}/plots',
-            plot_name=f'learning_curve{reward_post_fix}{post_fix}{base_post_fix}',
+            save_path=f"{path}/plots",
+            plot_name=f"learning_curve{reward_post_fix}{post_fix}{base_post_fix}",
             save_type=save_type,
             width=1,
             height_ratio=1 / 1,
