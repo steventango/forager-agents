@@ -18,9 +18,10 @@ parser.add_argument('--runs', type=int, required=True)
 parser.add_argument('-e', type=str, nargs='+', required=True)
 parser.add_argument('--cpus', type=int, default=8)
 parser.add_argument("--gpu", action="store_true", default=False)
+parser.add_argument("--record", action="store_true", default=False)
 parser.add_argument('--entry', type=str, default='src/main.py')
 parser.add_argument('--results', type=str, default='./')
-parser.add_argument("--xla_python_client_mem_fraction", type=float, default=0.2)
+parser.add_argument("--xla_python_client_mem_fraction", type=float, default=0.3)
 
 def count(pre, it):
     print(pre, 0, end='\r')
@@ -36,6 +37,7 @@ if __name__ == "__main__":
     pool = Pool(cmdline.cpus)
 
     gpu = "--gpu" if cmdline.gpu else ""
+    record = "--record" if cmdline.record else ""
 
     cmds = []
     e_to_missing = gather_missing_indices(cmdline.e, cmdline.runs, loader=Experiment.load)
@@ -44,7 +46,7 @@ if __name__ == "__main__":
 
         indices = count(path, e_to_missing[path])
         for idx in indices:
-            exe = f"python {cmdline.entry} {gpu} --silent -e {path} -i {idx}"
+            exe = f"python {cmdline.entry} {gpu} {record} --silent -e {path} -i {idx}"
             cmds.append(exe)
 
     print(len(cmds))
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     n = len(cmds)
 
     max_workers = os.cpu_count() or 1
-    workers = min(max_workers, n)
+    workers = min(max_workers, n, cmdline.cpus)
     env = os.environ.copy()
     if not cmdline.gpu:
         env["JAX_PLATFORMS"] = "cpu"

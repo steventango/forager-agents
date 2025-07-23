@@ -1,3 +1,2 @@
-bash scripts/forager-temp-fix-slow.sh
-bash scripts/forager-temp-fix.sh
-wait
+bash scripts/forager-two-biome-small-sweep.sh
+bash scripts/forager-two-biome-small.sh

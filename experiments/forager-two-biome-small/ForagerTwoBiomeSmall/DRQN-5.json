@@ -14,7 +14,7 @@
         "gamma": 0.99,
         "n_step": 1,
         "update_freq": 4,
-        "sequence_length": 128,
+        "sequence_length": 256,
         "environment": {
             "aperture": 5
         },
@@ -23,9 +23,9 @@
         },
         "optimizer": {
             "name": "ADAM",
-            "alpha": 0.0001,
+            "alpha": 0.001,
             "beta1": 0.9,
-            "beta2": 0.9,
+            "beta2": 0.999,
             "eps": 1e-08
         },
         "representation": {

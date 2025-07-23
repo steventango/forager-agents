@@ -32,11 +32,13 @@ setFonts(20)
 COLORS = {
     'DQN-3': 'blue',
     'DQN-5': 'cyan',
+    'DQN-5-mlp': 'green',
     'DQN-15': 'magenta',
+    'DQN-15-mlp': 'red',
     'DQN-17': 'red',
     "DRQN-3": "#00ffff",
-    "DRQN-5": "#3ddcff",
-    "DRQN-15": "#ff00ff",
+    "DRQN-5": "#EEFF00",
+    "DRQN-15": "#550055",
     'DRQN-17': 'red',
     'Random': '#000000',
 }
@@ -81,6 +83,8 @@ if __name__ == "__main__":
     f, ax = plt.subplots()
     for alg, sub_df in sorted(split_over_column(df, col='algorithm'), key=lambda x: int(x[0].split('-')[1])):
         if len(sub_df) == 0: continue
+        if alg.startswith('DRQN'):
+            continue
 
         report = Hypers.select_best_hypers(
             sub_df,
@@ -100,7 +104,7 @@ if __name__ == "__main__":
             sub_df,
             report.best_configuration,
             metric=METRIC,
-            interpolation=lambda x, y: compute_step_return(x, y, exp.total_steps),
+            interpolation=lambda x, y: compute_step_return(x, y, max(x) + x[1]),
         )
 
         subsample = len(xs[0]) // POINTS
