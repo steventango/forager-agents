@@ -234,6 +234,8 @@ class NetworkBuilder:
 
         self._retrieved_params = False
 
+        print(hk.experimental.tabulate(self._feat_net)(np.ones((1,) + self._input_shape)))
+
     def getParams(self):
         self._retrieved_params = True
         return self._params
@@ -274,6 +276,7 @@ class NetworkBuilder:
         self._rng, rng = jax.random.split(self._rng)
         h_net = hk.without_apply_rng(hk.transform(_builder))
         h_params = h_net.init(rng, sample_phi)
+        print(hk.experimental.tabulate(h_net)(sample_phi))
 
         name = name or _state.get('name')
         assert name is not None, 'Could not detect name from module'
@@ -301,11 +304,17 @@ def buildFeatureNetwork(inputs: Tuple, params: Dict[str, Any], rng: Any):
         name = params['type']
         hidden = params['hidden']
 
+
+
         if name == 'TwoLayerRelu':
-            layers = reluLayers([hidden, hidden], name='phi')
+            layers = [hk.Flatten(name='phi')] + reluLayers([hidden, hidden], name='phi')
 
         elif name == 'OneLayerRelu':
             layers = reluLayers([hidden], name='phi')
+
+        elif name.endswith('LayerRelu'):
+            n_layers = int(name.split('LayerRelu')[0])
+            layers = [hk.Flatten(name='phi')] + reluLayers([hidden] * n_layers, name='phi')
 
         elif name == 'ForagerNet':
             w_init = hk.initializers.Orthogonal(np.sqrt(2))
