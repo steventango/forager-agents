@@ -1,3 +1,4 @@
+import operator
 from functools import partial
 from typing import Any, Dict, Tuple
 from PyExpUtils.collection.Collector import Collector
@@ -36,14 +37,16 @@ class DQN(NNAgent):
     def __init__(self, observations: Tuple, actions: int, params: Dict, collector: Collector, seed: int):
         super().__init__(observations, actions, params, collector, seed)
         # set up the target network parameters
-        self.target_refresh = params['target_refresh']
-        self.tau = params.get('tau', 1.0)
+        self.target_refresh = params["target_refresh"]
+        self.tau = params.get("tau", 1.0)
+        self.w0_regularization = params.get("w0_regularization", 0.0)
 
         self.state = AgentState(
             params=self.state.params,
             target_params=self.state.params,
             optim=self.state.optim,
         )
+        self.initial_params = self.state.params
 
     # ------------------------
     # -- NN agent interface --
@@ -99,9 +102,17 @@ class DQN(NNAgent):
     # -- Updates --
     # -------------
     @partial(jax.jit, static_argnums=0)
-    def _computeUpdate(self, state: AgentState, batch: Batch, weights: jax.Array):
+    def _computeUpdate(
+        self,
+        state: AgentState,
+        batch: Batch,
+        weights: jax.Array,
+        initial_params: jax.Array,
+    ):
         grad_fn = jax.grad(self._loss, has_aux=True)
-        grad, metrics = grad_fn(state.params, state.target_params, batch, weights)
+        grad, metrics = grad_fn(
+            state.params, state.target_params, initial_params, batch, weights
+        )
 
         updates, optim = self.optimizer.update(grad, state.optim, state.params)
         params = optax.apply_updates(state.params, updates)
@@ -114,7 +125,14 @@ class DQN(NNAgent):
 
         return new_state, metrics
 
-    def _loss(self, params: hk.Params, target: hk.Params, batch: Batch, weights: jax.Array):
+    def _loss(
+        self,
+        params: hk.Params,
+        target: hk.Params,
+        initial_params: hk.Params,
+        batch: Batch,
+        weights: jax.Array,
+    ):
         phi = self.phi(params, batch.x).out
         phi_p = self.phi(target, batch.xp).out
 
@@ -126,5 +144,14 @@ class DQN(NNAgent):
 
         chex.assert_equal_shape((weights, losses))
         loss = jnp.mean(weights * losses)
+
+        loss += self.w0_regularization * jax.tree.reduce(
+            operator.add,
+            jax.tree.map(
+                lambda p, ip: jnp.sum(jnp.square(p - ip)),
+                params,
+                initial_params,
+            ),
+        )
 
         return loss, metrics
