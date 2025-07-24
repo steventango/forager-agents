@@ -70,6 +70,8 @@ def plot_reward(rewards: np.ndarray, duration: int, repeat: int, title: str):
     plt.savefig(title)
     plt.clf()
 
-plot_reward(df["normalized_mean_temperature"].to_numpy(), int(1e6), 500, 'reward_timeseries_slow.pdf')
+for duration_exponent in range(3, 9):
+    plot_reward(df["normalized_mean_temperature"].to_numpy(), int(10 ** duration_exponent), 500, f'reward_timeseries_slow_1e{duration_exponent}.pdf')
+
 plot_reward(df["normalized_mean_temperature"].to_numpy(), int(1e6), 100, 'reward_timeseries_fast.pdf')
 # %%
