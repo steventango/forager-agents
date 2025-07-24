@@ -20,5 +20,9 @@ class ForagerTemperature(BaseProblem):
         # get number of object types from env
         num_objects = len(self.env.env._names)
 
+        # if memory trace is used, we double the number of channels
+        if self.env_params.get("memory_trace_lambda", 0.0) > 0:
+            num_objects *= 2
+
         self.observations = (ap_x, ap_y, num_objects)
         self.gamma = 0.99
