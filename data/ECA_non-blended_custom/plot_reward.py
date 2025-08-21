@@ -56,10 +56,12 @@ def reward_gen(rewards: np.ndarray, duration: int, repeat: int) -> np.ndarray:
 def plot_reward(rewards: np.ndarray, duration: int, repeat: int, title: str):
     timeseries = reward_gen(rewards, duration, repeat)
     points = 500
-    x = np.linspace(0, duration, points)
-    timeseries = timeseries[::(len(timeseries) // points)]
+    x = np.linspace(0, duration, len(timeseries))
+    if duration > points:
+        x = np.linspace(0, duration, points)
+        timeseries = timeseries[::(len(timeseries) // points)]
     setFonts(20)
-    plt.figure(figsize=(6, 6))
+    plt.figure(figsize=(12, 4))
     plt.plot(x, timeseries, label='reward', color='black')
     plt.xlabel('Time steps')
     plt.ylabel('Reward')
@@ -70,8 +72,13 @@ def plot_reward(rewards: np.ndarray, duration: int, repeat: int, title: str):
     plt.savefig(title)
     plt.clf()
 
-for duration_exponent in range(3, 9):
-    plot_reward(df["normalized_mean_temperature"].to_numpy(), int(10 ** duration_exponent), 500, f'reward_timeseries_slow_1e{duration_exponent}.pdf')
+for duration_exponent in range(1, 9):
+    plot_reward(
+        df["normalized_mean_temperature"].to_numpy(),
+        int(10**duration_exponent),
+        1,
+        f"reward_timeseries_slow_1e{duration_exponent}.pdf",
+    )
 
 plot_reward(df["normalized_mean_temperature"].to_numpy(), int(1e6), 100, 'reward_timeseries_fast.pdf')
 # %%
