@@ -220,6 +220,34 @@ class ForagerGRUNet(hk.Module):
         return outputs_sequence, states_sequence, initial_carry
 
 
+class ForagerNet(hk.Module):
+    def __init__(self, output_channels: int, hidden: int, name: str = ""):
+        super().__init__(name=name)
+        w_init = hk.initializers.Orthogonal(np.sqrt(2))
+        self.conv = hk.Conv2D(output_channels, 3, 1, w_init=w_init, name='phi')
+        self.flatten = hk.Flatten(name='phi')
+        b_init = hk.initializers.Constant(0)
+        self.phi = hk.Linear(hidden, w_init=w_init, b_init=b_init, name="phi")
+
+    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+        x = self.conv(x)
+        x = jax.nn.relu(x)
+        x = self.flatten(x)
+        x = self.phi(x)
+        x = jax.nn.relu(x)
+        return x
+
+
+class ForagerTwoNet(hk.Module):
+    def __init__(self, output_channels: int, hidden: int, name: str = ""):
+        super().__init__(name=name)
+        self.permanent = ForagerNet(output_channels, hidden, name='permanent')
+        self.transient = ForagerNet(output_channels, hidden, name='transient')
+
+    def __call__(self, x: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+        return self.permanent(x), self.transient(x)
+
+
 class NetworkBuilder:
     def __init__(self, input_shape: Tuple, params: Dict[str, Any], seed: int):
         self._input_shape = tuple(input_shape)
@@ -271,7 +299,11 @@ class NetworkBuilder:
         if 'GRU' in self._h_params['type']:
             sample_phi = self._feat_net.apply(self._feat_params, sample_in)[0]
         else:
-            sample_phi = self._feat_net.apply(self._feat_params, sample_in).out
+            out = self._feat_net.apply(self._feat_params, sample_in)
+            if isinstance(out, tuple):
+                sample_phi = out[0]
+            else:
+                sample_phi = out.out
 
         self._rng, rng = jax.random.split(self._rng)
         h_net = hk.without_apply_rng(hk.transform(_builder))
@@ -324,6 +356,11 @@ def buildFeatureNetwork(inputs: Tuple, params: Dict[str, Any], rng: Any):
                 hk.Flatten(name='phi'),
             ]
             layers += reluLayers([hidden], name='phi')
+
+        elif name == "ForagerTwoNet":
+            net = ForagerTwoNet(output_channels=8, hidden=hidden, name='ForagerTwoNet')
+            return net(x, *args, **kwargs)
+
         elif name == 'ForagerGRUNet':
             net = ForagerGRUNet(hidden=hidden, learn_initial_h=params.get('learn_initial_h', True), name='ForagerGRUNet')
             return net(x, *args, **kwargs)

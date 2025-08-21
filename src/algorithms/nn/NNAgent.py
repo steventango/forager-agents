@@ -59,6 +59,7 @@ class NNAgent(BaseAgent):
         else:
             self.phi = builder.getFeatureFunction()
         net_params = builder.getParams()
+        self.net_params = net_params
 
         # ---------------
         # -- Optimizer --
