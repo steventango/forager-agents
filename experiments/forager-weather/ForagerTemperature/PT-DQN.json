@@ -13,7 +13,7 @@
         "n_step": 1,
         "update_freq": 4,
         "environment": {
-            "repeat": 500,
+            "repeat": 1,
             "file": 0,
             "aperture": 9,
             "reward_in_observation": true

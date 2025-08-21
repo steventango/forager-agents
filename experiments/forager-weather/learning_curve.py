@@ -68,15 +68,6 @@ BASE_COLOR = "grey"
 BASE_LINESTYLE = "--"
 base_post_fix = "" if BASE is None else "_based"
 
-PLOT_REWARD = False
-reward_post_fix = "_reward" if PLOT_REWARD else ""
-
-if PLOT_REWARD:
-    SKIP = COLORS.keys() - ["Temperature"]
-else:
-    SKIP.append("Temperature")
-
-
 def custom_order(alg: str):
     alg_order_map = {
         "Greedy-privileged": 0,
@@ -113,9 +104,7 @@ def extract_learning_curves(
         # if x is not strictly increasing, there are duplicates,
         # we just take the second half for now
         if not np.all(x[1:] > x[:-1]):
-            x = x[len(x) // 2 :]
-            y = y[len(y) // 2 :]
-            print("processed:", x.shape, y.shape)
+            continue
 
         if interpolation is not None:
             x, y = interpolation(x, y)
@@ -125,11 +114,20 @@ def extract_learning_curves(
 
     return xs, ys
 
+PLOT_REWARD = False
+reward_post_fix = "_reward" if PLOT_REWARD else ""
+
+if PLOT_REWARD:
+    SKIP = COLORS.keys() - ["Temperature"]
+else:
+    SKIP.append("Temperature")
 
 if __name__ == "__main__":
     path, should_save, save_type = parseCmdLineArgs()
+    should_save = True
+    save_type = "pdf"
 
-    results = ResultCollection.fromExperiments(Model=ExperimentModel, metrics=[METRIC])
+    results = ResultCollection.fromExperiments(Model=ExperimentModel)
 
     data_definition(
         hyper_cols=results.get_hyperparameter_columns(),
@@ -204,18 +202,18 @@ if __name__ == "__main__":
         # make sure all of the x values are the same for each curve
         assert np.all(np.isclose(xs[0], xs))
 
-        res = curve_percentile_bootstrap_ci(
-            rng=np.random.default_rng(0),
-            y=ys,
-            statistic=Statistic.mean,
-        )
+        if not PLOT_REWARD:
+            res = curve_percentile_bootstrap_ci(
+                rng=np.random.default_rng(0),
+                y=ys,
+                statistic=Statistic.mean,
+            )
 
-        label = ALG_LABEL.get(alg, alg) if alg != "Temperature" else "Reward"
-        sample_stat = res.sample_stat
-        if alg == "Temperature":
-            # get absolute reward
-            sample_stat = np.abs(sample_stat)
-            ys = np.abs(ys)
+            sample_stat = res.sample_stat
+        else:
+            sample_stat = ys[0]
+
+        label = ALG_LABEL.get(alg, alg)
         if alg == BASE:
             ax.plot(
                 xs[0],
@@ -255,15 +253,11 @@ if __name__ == "__main__":
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    if should_save:
-        save(
-            save_path=f"{path}/plots",
-            plot_name=f"learning_curve{reward_post_fix}{post_fix}{base_post_fix}",
-            save_type=save_type,
-            width=3,
-            height_ratio=1 / 4,
-        )
-        plt.clf()
-    else:
-        plt.show()
-        exit()
+    save(
+        save_path=f"{path}/plots",
+        plot_name=f"learning_curve{reward_post_fix}{post_fix}{base_post_fix}",
+        save_type=save_type,
+        width=3,
+        height_ratio=1 / 4,
+    )
+    plt.clf()

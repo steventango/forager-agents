@@ -13,7 +13,7 @@
         "n_step": 1,
         "update_freq": 4,
         "environment": {
-            "repeat": 500,
+            "repeat": 1,
             "file": 0,
             "aperture": 9,
             "privileged": true,
@@ -24,7 +24,7 @@
         },
         "optimizer": {
             "name": "ADAM",
-            "alpha": 0.0001,
+            "alpha": 0.001,
             "beta1": 0.9,
             "beta2": 0.999,
             "eps": 1e-08

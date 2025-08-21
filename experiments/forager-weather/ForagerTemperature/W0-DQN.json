@@ -12,9 +12,9 @@
         "gamma": 0.9,
         "n_step": 1,
         "update_freq": 4,
-        "w0_regularization": 0.0001,
+        "w0_regularization": [0.001, 0.0001, 0.00001],
         "environment": {
-            "repeat": 500,
+            "repeat": 1,
             "file": 0,
             "aperture": 9,
             "reward_in_observation": true
@@ -24,7 +24,7 @@
         },
         "optimizer": {
             "name": "ADAM",
-            "alpha": 0.0001,
+            "alpha": [0.003, 0.001, 0.0003, 0.0001, 0.00003],
             "beta1": 0.9,
             "beta2": 0.999,
             "eps": 1e-08
