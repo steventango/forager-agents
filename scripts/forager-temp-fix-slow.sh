@@ -6,6 +6,7 @@ python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTe
 python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTemperature/DQN-11.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTemperature/DQN-privileged.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTemperature/DQN.json --entry src/continuing_main.py --cpus 30
+python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTemperature/W0-DQN.json --entry src/continuing_main.py --cpus 15
 python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTemperature/Greedy-privileged.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTemperature/Greedy-hot.json --entry src/continuing_main.py --cpus 30
 python scripts/local.py --runs 30 -e experiments/forager-temp-fix-slow/ForagerTemperature/Greedy.json --entry src/continuing_main.py --cpus 30

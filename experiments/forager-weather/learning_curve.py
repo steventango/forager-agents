@@ -32,6 +32,8 @@ COLORS = {
     "DQN": "blue",
     "W0-DQN": "magenta",
     "DQN-11": "magenta",
+    "DQN-9-memory": "orange",
+    "DRQN-9": GDMColor.GREEN,
     "DQN-9": GDMColor.BLUE,
     "DQN-7": "yellow",
     "DQN-5": "pink",
@@ -47,19 +49,21 @@ ALG_LABEL = {
     "Greedy-privileged": "Oracle Search",
     "DQN-privileged": "Oracle DQN",
     "DQN-9": "DQN",
+    "DRQN-9": "DRQN",
+    "DQN-9-memory": "DQN + Memory Trace",
 }
 
 # SKIP = ["Greedy"]
-SKIP = ["Random", "Greedy-hot", "DQN", "DQN-5", "DQN-7", "DQN-11"]
+SKIP = ["Random", "Greedy-hot","Greedy", "DQN", "DQN-5", "DQN-7", "DQN-11"]
 SKIP_ERROR = ["Greedy"]
 # SKIP = COLORS.keys() - ["DQN-11"]
 METRIC = "reward"
 # keep 1 in every SUBSAMPLE measurements
-POINTS = 100
+POINTS = 500
 PLOT_THE_FIRST = 1.0
 post_fix = "" if PLOT_THE_FIRST == 1.0 else f"_{PLOT_THE_FIRST}"
 
-BASE = "Greedy-privileged"
+BASE = None
 BASE_COLOR = "grey"
 BASE_LINESTYLE = "--"
 base_post_fix = "" if BASE is None else "_based"
@@ -79,8 +83,9 @@ def custom_order(alg: str):
         "DQN-privileged": 1,
         "Random": 2,
         "Greedy": 3,
-        "DQN": 4,
-        "DQN-11": 5,
+        "DQN-9": 4,
+        "DQN-9-memory": 5,
+        "DRQN-9": 6,
     }
     return alg_order_map.get(alg, 1000)
 
@@ -255,8 +260,8 @@ if __name__ == "__main__":
             save_path=f"{path}/plots",
             plot_name=f"learning_curve{reward_post_fix}{post_fix}{base_post_fix}",
             save_type=save_type,
-            width=1,
-            height_ratio=1 / 1,
+            width=3,
+            height_ratio=1 / 4,
         )
         plt.clf()
     else:

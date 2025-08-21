@@ -35,7 +35,7 @@ def q_loss(q, a, r, gamma, qp):
     }
 
 
-class DQN(NNAgent):
+class PT_DQN(NNAgent):
     def __init__(
         self,
         observations: Tuple,

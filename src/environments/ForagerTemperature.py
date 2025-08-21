@@ -75,7 +75,8 @@ def cold_factory(rewards: np.ndarray, repeat: int) -> ObjectFactory:
 
 class ForagerTemperature(BaseEnvironment):
     def __init__(self, seed: int, aperture: int, privileged: bool = False,
-                 dummy: bool = False, repeat: int = 100, file: None | int = None):
+                 dummy: bool = False, repeat: int = 100, file: None | int = None,
+                 reward_in_observation: bool = False, memory_trace_lambda: float = 0.0):
         if file is None:
             assert 0 <= seed < len(FILE_PATHS)
             self.rewards = load_data(FILE_PATHS[seed])
@@ -91,8 +92,11 @@ class ForagerTemperature(BaseEnvironment):
             aperture=aperture,
             seed=seed,
         )
+        self.aperture = aperture
         self.privileged = privileged
         self.dummy = dummy
+        self.reward_in_observation = reward_in_observation
+        self.memory_trace_lambda = memory_trace_lambda
         self.env = ForagerEnv(config)
         # 012345678901234
         # ___AA_____BB___
@@ -101,7 +105,11 @@ class ForagerTemperature(BaseEnvironment):
 
     def start(self) -> Any:
         obs = self.env.start()
-        return obs.astype(np.float32)
+        obs = obs.astype(np.float32)
+        if self.memory_trace_lambda > 0:
+            self.memory_trace = obs.copy()
+            obs = np.concatenate([obs, self.memory_trace], axis=-1)
+        return obs
 
     def step(self, a: int):
         obs, r = self.env.step(a)
@@ -111,6 +119,14 @@ class ForagerTemperature(BaseEnvironment):
             obs *= temperature
         if self.dummy:
             r = get_temperature(self.rewards, self.env._clock, self.repeat)
+        if self.reward_in_observation:
+            # put the reward in the center of the observation
+            # center is always empty since agent is in the center
+            center = self.aperture // 2
+            obs[center, center, :] = r
+        if self.memory_trace_lambda > 0:
+            self.memory_trace = self.memory_trace_lambda * self.memory_trace + (1 - self.memory_trace_lambda) * obs
+            obs = np.concatenate([obs, self.memory_trace], axis=-1)
         return (r, obs, False, {})
 
 
